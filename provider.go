@@ -157,3 +157,110 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
                 DangerouslyIgnoreUnknownAttributes: d.Get("pm_dangerously_ignore_unknown_attributes").(bool),
         }, nil
 }
+func getClient(pm_api_url string,
+        pm_email string,
+        pm_password string,
+        pm_api_token string,
+        pm_tls_insecure bool,
+        pm_timeout int,
+        pm_debug bool) (*vm6api.Client, error) {
+
+        tlsconf := &tls.Config{InsecureSkipVerify: true}
+        if !pm_tls_insecure {
+                tlsconf = nil
+        }
+
+        var err error
+
+        if pm_password != "" && pm_api_token != "" {
+                err = fmt.Errorf("password and API token both exist, choose one or the other")
+        }
+	if pm_password == "" && pm_api_token == "" {
+                err = fmt.Errorf("password and API token do not exist, one of these must exist")
+        }
+
+        client, _ := vm6api.NewClient(pm_api_url, nil, tlsconf, pm_timeout)
+        *vm6api.Debug = pm_debug
+
+	// User+Pass authentication
+        if pm_email != "" && pm_password != "" {
+                err = client.Login(pm_user, pm_password)
+        }
+
+        // API authentication
+        if pm_api_token != "" && pm_api_token_secret != "" {
+                client.SetAPIToken(pm_api_token)
+        }
+
+        if err != nil {
+                return nil, err
+        }
+        return client, nil
+}
+
+type pmApiLockHolder struct {
+        locked bool
+        pconf  *providerConfiguration
+}
+
+func (lock *pmApiLockHolder) lock() {
+        if lock.locked {
+                return
+        }
+        lock.locked = true
+        pconf := lock.pconf
+        pconf.Mutex.Lock()
+        for pconf.CurrentParallel >= pconf.MaxParallel {
+                pconf.Cond.Wait()
+        }
+        pconf.CurrentParallel++
+        pconf.Mutex.Unlock()
+}
+
+func (lock *pmApiLockHolder) unlock() {
+        if !lock.locked {
+                return
+        }
+        lock.locked = false
+        pconf := lock.pconf
+        pconf.Mutex.Lock()
+        pconf.CurrentParallel--
+        pconf.Cond.Signal()
+        pconf.Mutex.Unlock()
+}
+
+func pmParallelBegin(pconf *providerConfiguration) *pmApiLockHolder {
+        lock := &pmApiLockHolder{
+                pconf:  pconf,
+                locked: false,
+        }
+        lock.lock()
+        return lock
+}
+
+func resourceId(targetNode string, resType string, vmId int) string {
+        return fmt.Sprintf("%s/%s/%d", targetNode, resType, vmId)
+}
+
+func parseResourceId(resId string) (targetNode string, resType string, vmId int, err error) {
+        if !rxRsId.MatchString(resId) {
+                return "", "", -1, fmt.Errorf("invalid resource format: %s. Must be node/type/vmId", resId)
+        }
+        idMatch := rxRsId.FindStringSubmatch(resId)
+        targetNode = idMatch[1]
+        resType = idMatch[2]
+        vmId, err = strconv.Atoi(idMatch[3])
+        return
+}
+
+func clusterResourceId(resType string, resId string) string {
+        return fmt.Sprintf("%s/%s", resType, resId)
+}
+
+func parseClusterResourceId(resId string) (resType string, id string, err error) {
+        if !rxClusterRsId.MatchString(resId) {
+                return "", "", fmt.Errorf("invalid resource format: %s. Must be type/resId", resId)
+        }
+        idMatch := rxClusterRsId.FindStringSubmatch(resId)
+        return idMatch[1], idMatch[2], nil
+}
