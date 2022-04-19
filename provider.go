@@ -3,12 +3,10 @@ package vmmanager6
 import (
         "crypto/tls"
         "fmt"
-        "os"
         "strconv"
-        "strings"
         "sync"
 
-        vm6api "../vmmanager6-api-go"
+        vm6api "github.com/usaafko/vmmanager6-api-go"
         "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -184,11 +182,11 @@ func getClient(pm_api_url string,
 
 	// User+Pass authentication
         if pm_email != "" && pm_password != "" {
-                err = client.Login(pm_user, pm_password)
+                err = client.Login(pm_email, pm_password)
         }
 
         // API authentication
-        if pm_api_token != "" && pm_api_token_secret != "" {
+        if pm_api_token != "" {
                 client.SetAPIToken(pm_api_token)
         }
 
