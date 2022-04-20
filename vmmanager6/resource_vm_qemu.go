@@ -29,13 +29,12 @@ func resourceVmQemu() *schema.Resource {
 		Schema: map[string]*schema.Schema{
                         "vmid": {
                                 Type:             schema.TypeInt,
-                                Optional:         true,
+				Computed:	  true,
                                 Description:      "The VM identifier in VMmanager",
                         },
 			"name": {
 				Type:        schema.TypeString,
-                                Optional:    true,
-                                Default:     "",
+                                Required:    true,
                                 Description: "The VM name",
 			},
 			"desc": {
@@ -49,18 +48,15 @@ func resourceVmQemu() *schema.Resource {
                         },
 			"cores": {
                                 Type:     schema.TypeInt,
-                                Optional: true,
-                                Default:  1,
+                                Required: true,
                         },
 			"memory": {
                                 Type:     schema.TypeInt,
-                                Optional: true,
-                                Default:  512,
+                                Required: true,
                         },
 			"disk": {
                                 Type:     schema.TypeInt,
-                                Optional: true,
-                                Default:  6000,
+                                Required: true,
                         },
 
 		},
@@ -90,13 +86,14 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		QemuCores:    d.Get("cores").(int),
 		QemuDisks:    d.Get("disk").(int),
 	}
-	err := config.CreateVm(client)
+	vmid, err := config.CreateVm(client)
 	if err != nil {
 		return err
 	}
+	d.SetId(string(vmid))
 	log.Print("[DEBUG][QemuVmCreate] vm creation done!")
         lock.unlock()
-        return resourceVmQemuRead(d, meta)
+        return nil
 }
 
 func resourceVmQemuUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

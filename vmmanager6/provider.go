@@ -46,9 +46,10 @@ func Provider() *schema.Provider {
                                 DefaultFunc: schema.EnvDefaultFunc("PM_API_URL", nil),
                                 Description: "https://host.fqdn/vm/v3",
                         },
-			"pm_api_token_id": {
+			"pm_api_token": {
                                 Type:        schema.TypeString,
                                 Optional:    true,
+				Default: "",
                                 DefaultFunc: schema.EnvDefaultFunc("PM_API_TOKEN", nil),
                                 Description: "API Token",
                         },
