@@ -90,7 +90,10 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		QemuCores:    d.Get("cores").(int),
 		QemuDisks:    d.Get("disk").(int),
 	}
-
+	err := config.CreateVm(client)
+	if err != nil {
+		return err
+	}
 	log.Print("[DEBUG][QemuVmCreate] vm creation done!")
         lock.unlock()
         return resourceVmQemuRead(d, meta)
@@ -139,9 +142,9 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
         }
 
 	vmState, err := client.GetVmState(vmr)
-        log.Printf("[DEBUG] VM status: %s", vmState["status"])
+        log.Printf("[DEBUG] VM status: %s", vmState)
 
-	if err == nil && vmState["status"] == "started" {
+	if err == nil && vmState == "active" {
                 log.Printf("[DEBUG] VM is running, cheking the IP")
 	}
 
@@ -151,7 +154,6 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 
         logger.Debug().Int("vmid", vmID).Msgf("[READ] Received Config from VMmanager6 API: %+v", config)
 
-	d.SetId(resourceId(vmr.Node(), "qemu", vmr.VmId()))
 	d.Set("name", config.Name)
 	d.Set("desc", config.Description)
 	d.Set("memory", config.Memory)

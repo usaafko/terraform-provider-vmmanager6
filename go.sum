@@ -190,10 +190,13 @@ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
-github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/usaafko/vmmanager6-api-go v0.0.0-20220418080553-39b7334483db h1:y5q4ZOxubXs8VYHDjC9e2OvfzmTxI+vMJiAd8O9BrBs=
-github.com/usaafko/vmmanager6-api-go v0.0.0-20220418080553-39b7334483db/go.mod h1:asO+v+yNDHWVP8E4wIE+GJGSzv7wrSD/igPnh0SrOIg=
+github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMTY=
+github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/usaafko/vmmanager6-api-go v0.0.0-20220420030935-d5058ab5908e h1:gy3rsgpmiEG6KEtvDbSn5qhDr3Fl737VeK1y2XniJww=
+github.com/usaafko/vmmanager6-api-go v0.0.0-20220420030935-d5058ab5908e/go.mod h1:3RSu8vvMTBiAInPrrwPVfm+r8pRGs532zBpn8tHC1DY=
+github.com/usaafko/vmmanager6-api-go v0.0.0-20220420063001-1c1c30054ba4 h1:VRewd9u88aerQnLJysooGm1DEY/vfP37BJLyiTFaz0w=
+github.com/usaafko/vmmanager6-api-go v0.0.0-20220420063001-1c1c30054ba4/go.mod h1:3RSu8vvMTBiAInPrrwPVfm+r8pRGs532zBpn8tHC1DY=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
