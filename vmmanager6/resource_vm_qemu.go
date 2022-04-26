@@ -45,15 +45,52 @@ func resourceVmQemu() *schema.Resource {
 			"cores": {
                                 Type:     schema.TypeInt,
                                 Required: true,
+                                Description: "Number of vCPU's for VM",
                         },
 			"memory": {
                                 Type:     schema.TypeInt,
                                 Required: true,
+                                Description: "RAM Size of VM in Megabytes",
                         },
 			"disk": {
                                 Type:     schema.TypeInt,
                                 Required: true,
+                                Description: "Disk Size of VM in Megabytes",
                         },
+			"cluster": {
+                                Type:     schema.TypeInt,
+                                Optional: true,
+                                Default:     1,
+                                Description: "VMmanager 6 cluster id",
+			},
+			"account": {
+                                Type:     schema.TypeInt,
+                                Optional: true,
+                                Default:     3,
+                                Description: "VMmanager user id",
+			},
+			"domain": {
+                                Type:     schema.TypeString,
+                                Optional: true,
+                                Default:     "",
+                                Description: "Domain for VM's ip addresses and hostname",
+			},
+			"password": {
+                                Type:     schema.TypeString,
+                                Required:    true,
+                                Description: "Password for VM",
+			},
+			"os": {
+                                Type:     schema.TypeInt,
+                                Required:    true,
+                                Description: "VMmanager 6 template id",
+			},
+			"ipv4_number": {
+				Type:     schema.TypeInt,
+				Optional:    true,
+				Description: "Number of ipv4 addresses",
+			},
+
 
 		},
 		}
