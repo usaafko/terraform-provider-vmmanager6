@@ -5,6 +5,7 @@ import (
 	"strings"
 	"log"
 	"strconv"
+	"fmt"
 	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
         "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -84,7 +85,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	d.SetId(string(vmid))
+	d.SetId(fmt.Sprint(vmid))
 	logger.Debug().Int("vmid", vmid).Msgf("Finished VM read resulting in data: '%+v'", string(jsonString))
 	log.Print("[DEBUG][QemuVmCreate] vm creation done!")
         lock.unlock()
