@@ -109,14 +109,19 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
         lock := pmParallelBegin(pconf)
         //defer lock.unlock()
         client := pconf.Client
-        vmName := d.Get("name").(string)
 
-	config := vm6api.ConfigQemu{
-                Name:         vmName,
+	config := vm6api.ConfigNewQemu{
+                Name:         d.Get("name").(string),
                 Description:  d.Get("desc").(string),
 		Memory:       d.Get("memory").(int),
 		QemuCores:    d.Get("cores").(int),
 		QemuDisks:    d.Get("disk").(int),
+		Cluster:      d.Get("cluster").(int),
+		Account:      d.Get("account").(int),
+		Domain:       d.Get("domain").(string),
+		Password:     d.Get("password").(string),
+		IPv4:         d.Get("ipv4_number").(int),
+		Os:           d.Get("os").(int),
 	}
 	vmid, err := config.CreateVm(client)
 	if err != nil {
