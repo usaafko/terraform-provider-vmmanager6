@@ -3,8 +3,8 @@ package vmmanager6
 import (
 	"context"
 	"strings"
-	"fmt"
 	"log"
+	"strconv"
 	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
         "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -27,11 +27,6 @@ func resourceVmQemu() *schema.Resource {
                         StateContext: schema.ImportStatePassthroughContext,
                 },
 		Schema: map[string]*schema.Schema{
-                        "vmid": {
-                                Type:             schema.TypeInt,
-				Computed:	  true,
-                                Description:      "The VM identifier in VMmanager",
-                        },
 			"name": {
 				Type:        schema.TypeString,
                                 Required:    true,
@@ -71,7 +66,6 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 	// DEBUG print out the create request
         flatValue, _ := resourceDataToFlatValues(d, thisResource)
         jsonString, _ := json.Marshal(flatValue)
-        logger.Debug().Str("vmid", d.Id()).Msgf("Invoking VM create with resource data:  '%+v'", string(jsonString))
 
 	pconf := meta.(*providerConfiguration)
         lock := pmParallelBegin(pconf)
@@ -91,6 +85,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	d.SetId(string(vmid))
+	logger.Debug().Int("vmid", vmid).Msgf("Finished VM read resulting in data: '%+v'", string(jsonString))
 	log.Print("[DEBUG][QemuVmCreate] vm creation done!")
         lock.unlock()
         return nil
@@ -116,14 +111,11 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
         // create a logger for this function
         logger, _ := CreateSubLogger("resource_vm_read")
 
-	_, _, vmID, err := parseResourceId(d.Id())
-        if err != nil {
-                d.SetId("")
-                return fmt.Errorf("unexpected error when trying to read and parse the resource: %v", err)
+	vmID, err := strconv.Atoi(d.Id())
+	if err != nil {
+                return err
         }
-
-        logger.Info().Int("vmid", vmID).Msg("Reading configuration for vmid")
-        vmr := vm6api.NewVmRef(vmID)
+	vmr := vm6api.NewVmRef(vmID)
 
 	// Try to get information on the vm. If this call err's out
         // that indicates the VM does not exist. We indicate that to terraform
