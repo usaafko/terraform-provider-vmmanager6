@@ -139,6 +139,11 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(fmt.Sprint(vmid))
 	logger.Debug().Int("vmid", vmid).Msgf("Finished VM read resulting in data: '%+v'", string(jsonString))
+	err = _resourceVmQemuRead(d, meta)
+	if err != nil {
+		return err
+	}
+
 	log.Print("[DEBUG][QemuVmCreate] vm creation done!")
         lock.unlock()
         return nil
