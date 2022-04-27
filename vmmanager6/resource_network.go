@@ -2,10 +2,10 @@ package vmmanager6
 
 import (
 	"context"
-	"strings"
+//	"strings"
 	"log"
-	"strconv"
-	"fmt"
+//	"strconv"
+//	"fmt"
 	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
         "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,7 +65,7 @@ func resourceNetworkCreate(d *schema.ResourceData, meta interface{}) error {
         client := pconf.Client
 
 	config := vm6api.ConfigNewNetwork{
-                Name:         d.Get("name").(string),
+                Name:         d.Get("network").(string),
                 Gateway:      d.Get("gateway").(string),
                 Note:         d.Get("desc").(string),
 	}
@@ -74,7 +74,7 @@ func resourceNetworkCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	d.SetId(vmid)
-	logger.Debug().String("vmid", vmid).Msgf("Finished network read resulting in data: '%+v'", string(jsonString))
+	logger.Debug().Msgf("Finished network read resulting in data: '%+v'", string(jsonString))
 	
 	log.Print("[DEBUG][NetworkCreate] vm creation done!")
         lock.unlock()
@@ -95,8 +95,7 @@ func resourceNetworkDelete(d *schema.ResourceData, meta interface{}) error {
         defer lock.unlock()
 
         client := pconf.Client
-	
-	err = client.DeleteNetwork(d.Id())
+	err := client.DeleteNetwork(d.Id())
 	return err
 
 }
@@ -112,7 +111,7 @@ func _resourceNetworkRead(d *schema.ResourceData, meta interface{}) error {
 	// Try to get information on the network. If this call err's out
         // that indicates the network does not exist. We indicate that to terraform
         // by calling a SetId("")
-        _, err = client.GetNetworkInfo(d.Id())
+	_, err := client.GetNetworkInfo(d.Id())
 	if err != nil {
                 d.SetId("")
                 return nil
@@ -123,7 +122,7 @@ func _resourceNetworkRead(d *schema.ResourceData, meta interface{}) error {
         }
 
 
-        logger.Debug().String("vmid", d.Id()).Msgf("[READ] Received Network Config from VMmanager6 API: %+v", config)
+        logger.Debug().Msgf("[READ] Received Network Config from VMmanager6 API: %+v", config)
 
 	d.Set("network", config.Name)
 	d.Set("gateway", config.Gateway)
@@ -132,7 +131,7 @@ func _resourceNetworkRead(d *schema.ResourceData, meta interface{}) error {
 	// DEBUG print out the read result
         flatValue, _ := resourceDataToFlatValues(d, networkResource)
         jsonString, _ := json.Marshal(flatValue)
-	logger.Debug().String("vmid", d.Id()).Msgf("Finished VM read resulting in data: '%+v'", string(jsonString))
+	logger.Debug().Msgf("Finished VM read resulting in data: '%+v'", string(jsonString))
 
         return nil
 }
