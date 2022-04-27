@@ -206,7 +206,12 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("desc", config.Description)
 	d.Set("memory", config.Memory)
 	d.Set("cores", config.QemuCores)
-	d.Set("disk", config.QemuDisks)
+	d.Set("disk", config.QemuDisks.Size)
+	d.Set("cluster", config.Cluster.Id)
+	d.Set("account", config.Account.Id)
+	d.Set("domain", config.Domain)
+	d.Set("ipv4_number", len(config.IPv4))
+	d.Set("os", config.Os.Id)
 
 	// DEBUG print out the read result
         flatValue, _ := resourceDataToFlatValues(d, thisResource)
