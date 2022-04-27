@@ -17,18 +17,20 @@ description: |-
 
 ### Required
 
-- `cores` (Number)
-- `disk` (Number)
-- `memory` (Number)
+- `cores` (Number) Number of vCPU's for VM
+- `disk` (Number) Disk Size of VM in Megabytes
+- `memory` (Number) RAM Size of VM in Megabytes
 - `name` (String) The VM name
+- `os` (Number) VMmanager 6 template id
+- `password` (String, Sensitive) Password for VM
 
 ### Optional
 
+- `account` (Number) VMmanager user id
+- `cluster` (Number) VMmanager 6 cluster id
 - `desc` (String) The VM description
+- `domain` (String) Domain for VM's ip addresses and hostname
 - `id` (String) The ID of this resource.
-
-### Read-Only
-
-- `vmid` (Number) The VM identifier in VMmanager
+- `ipv4_number` (Number) Number of ipv4 addresses
 
 

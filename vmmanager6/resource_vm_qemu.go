@@ -147,7 +147,19 @@ func resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVmQemuDelete(d *schema.ResourceData, meta interface{}) error {
-	return nil
+	pconf := meta.(*providerConfiguration)
+        lock := pmParallelBegin(pconf)
+        defer lock.unlock()
+
+        client := pconf.Client
+	vmID, err := strconv.Atoi(d.Id())
+	if err != nil {
+                return err
+        }
+	vmr := vm6api.NewVmRef(vmID)
+	err = client.DeleteQemuVm(vmr)
+	return err
+
 }
 
 func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
