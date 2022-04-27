@@ -233,71 +233,13 @@ func resourceDataToFlatValues(d *schema.ResourceData, resource *schema.Resource)
                 case schema.TypeFloat:
                         flatValues[key] = d.Get(key).(float64)
                 case schema.TypeSet:
-                        values, _ := schemaSetToFlatValues(d.Get(key).(*schema.Set), value.Elem.(*schema.Resource))
-                        flatValues[key] = values
+                        flatValues[key] = d.Get(key).(interface{})
                 case schema.TypeList:
-                        values, _ := schemaListToFlatValues(d.Get(key).([]interface{}), value.Elem.(*schema.Resource))
-                        flatValues[key] = values
+                        flatValues[key] = d.Get(key)
                 default:
                         flatValues[key] = "? Print Not Implemented ?"
                 }
         }
 
-        return flatValues, nil
-}
-
-func schemaSetToFlatValues(set *schema.Set, resource *schema.Resource) ([]map[string]interface{}, error) {
-
-        flatValues := make([]map[string]interface{}, 0, 1)
-
-        for _, set := range set.List() {
-                innerFlatValues := make(map[string]interface{})
-
-                setAsMap := set.(map[string]interface{})
-                for key, value := range resource.Schema {
-                        switch value.Type {
-                        case schema.TypeString:
-                                innerFlatValues[key] = setAsMap[key].(string)
-                        case schema.TypeBool:
-                                innerFlatValues[key] = setAsMap[key].(bool)
-                        case schema.TypeInt:
-                                innerFlatValues[key] = setAsMap[key].(int)
-                        case schema.TypeFloat:
-                                innerFlatValues[key] = setAsMap[key].(float64)
-                        default:
-                                innerFlatValues[key] = "? Print Not Implemented ?"
-                        }
-                }
-
-                flatValues = append(flatValues, innerFlatValues)
-        }
-        return flatValues, nil
-}
-
-func schemaListToFlatValues(schemaList []interface{}, resource *schema.Resource) ([]map[string]interface{}, error) {
-
-        flatValues := make([]map[string]interface{}, 0, 1)
-
-        for _, item := range schemaList {
-                innerFlatValues := make(map[string]interface{})
-
-                itemAsMap := item.(map[string]interface{})
-                for key, value := range resource.Schema {
-                        switch value.Type {
-                        case schema.TypeString:
-                                innerFlatValues[key] = itemAsMap[key].(string)
-                        case schema.TypeBool:
-                                innerFlatValues[key] = itemAsMap[key].(bool)
-                        case schema.TypeInt:
-                                innerFlatValues[key] = itemAsMap[key].(int)
-                        case schema.TypeFloat:
-                                innerFlatValues[key] = itemAsMap[key].(float64)
-                        default:
-                                innerFlatValues[key] = "? Print Not Implemented ?"
-                        }
-                }
-
-                flatValues = append(flatValues, innerFlatValues)
-        }
         return flatValues, nil
 }

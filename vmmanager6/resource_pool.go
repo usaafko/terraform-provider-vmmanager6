@@ -37,13 +37,9 @@ func resourcePool() *schema.Resource {
                                 Type:     schema.TypeList,
                                 Required:    true,
                                 Description: "Range of ips in pool. Format: 192.168.0.1 or 192.168.0.1-192.168.0.10 or 192.168.0.0/24",
-                                Elem: &schema.Resource{
-                                	Schema: map[string]*schema.Schema{
-                                		"range": {
-                                			Type: schema.TypeString,
-                                			Required: true,
-                                		}
-                                }
+                                Elem: &schema.Schema{
+					Type: schema.TypeString,
+                                },
                         },
 			"desc": {
                                 Type:     schema.TypeString,
@@ -70,11 +66,15 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
         lock := pmParallelBegin(pconf)
         //defer lock.unlock()
         client := pconf.Client
-
+	genRanges := d.Get("ranges").([]interface{})
+	var myRanges []string
+	for _, Range := range genRanges {
+		myRanges = append(myRanges, Range.(string))
+	}
 	config := vm6api.ConfigNewPool{
                 Name:         d.Get("pool").(string),
                 Note:         d.Get("desc").(string),
-                Ranges:       d.Get("ranges").([]map[string]string)
+                Ranges:       myRanges,
 	}
 	vmid, err := config.CreatePool(client)
 	if err != nil {
