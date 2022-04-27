@@ -19,6 +19,7 @@ description: |-
 
 - `cores` (Number) Number of vCPU's for VM
 - `disk` (Number) Disk Size of VM in Megabytes
+- `ipv4_pools` (List of Number) VMmanager ip pools, to use for ip assignment
 - `memory` (Number) RAM Size of VM in Megabytes
 - `name` (String) The VM name
 - `os` (Number) VMmanager 6 template id

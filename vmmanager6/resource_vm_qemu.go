@@ -99,8 +99,16 @@ func resourceVmQemu() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional:    true,
 				Description: "Number of ipv4 addresses",
+				Default: 1,
 			},
-
+			"ipv4_pools": {
+				Type:	schema.TypeList,
+                                Required:    true,
+				Description: "VMmanager ip pools, to use for ip assignment",
+				Elem: &schema.Schema{
+                                        Type: schema.TypeInt,
+                                },
+			},
 
 		},
 		}
@@ -119,7 +127,11 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
         lock := pmParallelBegin(pconf)
         //defer lock.unlock()
         client := pconf.Client
-
+	ipv4_pools := d.Get("ipv4_pools").([]interface{})
+	var ipv4_pools_int []int
+	for _, ippool := range ipv4_pools {
+		ipv4_pools_int = append(ipv4_pools_int, ippool.(int))
+	}
 	config := vm6api.ConfigNewQemu{
                 Name:         d.Get("name").(string),
                 Description:  d.Get("desc").(string),
@@ -132,6 +144,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		Password:     d.Get("password").(string),
 		IPv4:         d.Get("ipv4_number").(int),
 		Os:           d.Get("os").(int),
+		IPv4Pools:    ipv4_pools_int,
 	}
 	vmid, err := config.CreateVm(client)
 	if err != nil {
