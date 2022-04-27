@@ -57,6 +57,12 @@ func resourceVmQemu() *schema.Resource {
                                 Required: true,
                                 Description: "Disk Size of VM in Megabytes",
                         },
+			"disk_id": {
+				Type:	  schema.TypeInt,
+				Optional:         true,
+                                Computed:         true,
+				Description:      "Main disk ID of VM",
+			},
 			"cluster": {
                                 Type:     schema.TypeInt,
                                 Optional: true,
@@ -139,7 +145,106 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVmQemuUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	pconf := meta.(*providerConfiguration)
+        lock := pmParallelBegin(pconf)
+	// create a logger for this function
+        logger, _ := CreateSubLogger("resource_vm_update")
+
+        client := pconf.Client
+	vmID, err := strconv.Atoi(d.Id())
+        if err != nil {
+                return diag.FromErr(err)
+        }
+        vmr := vm6api.NewVmRef(vmID)
+	logger.Info().Int("vmid", vmID).Msg("Starting update of the VM resource")
+
+	// Try to get information on the vm. If this call err's out
+        // that indicates the VM does not exist.
+        _, err = client.GetVmInfo(vmr)
+        if err != nil {
+                return diag.FromErr(err)
+        }
+
+	if d.HasChange("disk") {
+		oldValuesRaw, newValuesRaw := d.GetChange("disk")
+		oldValues := oldValuesRaw.(int)
+		newValues := newValuesRaw.(int)
+		if oldValues > newValues {
+			return diag.Errorf("Can't shrink VM's disk")
+		}
+	}
+
+
+	// VMmanager has different APIs to change things. 
+	// 1. Resources
+	if d.HasChanges("cores", "memory") {
+		config := vm6api.ResourcesQemu{
+			Cores:		d.Get("cores").(int),
+			Memory:		d.Get("memory").(int),
+		}
+		logger.Debug().Int("vmid", vmID).Msgf("Updating VM with the following configuration: %+v", config)
+		err = config.UpdateResources(vmr, client)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	// 2. VM settings
+	if d.HasChanges("name", "desc") {
+		config := vm6api.UpdateConfigQemu{
+			Name:		d.Get("name").(string),
+			Description:	d.Get("desc").(string),
+		}
+		logger.Debug().Int("vmid", vmID).Msgf("Updating VM with the following configuration: %+v", config)
+		err = config.UpdateConfig(vmr, client)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+	}
+	// 3. Change OS
+	if d.HasChange("os") {
+		config := vm6api.ReinstallOS{
+			Id:		d.Get("os").(int),
+			Password:	d.Get("password").(string),
+			EmailMode:	"saas_only",
+		}
+		logger.Debug().Int("vmid", vmID).Msgf("Updating VM with the following configuration: %+v", config)
+		err = config.ReinstallOS(vmr, client)
+		if err != nil {
+                        return diag.FromErr(err)
+                }
+	}
+	// 4. Change password
+	if d.HasChange("password") {
+		logger.Debug().Int("vmid", vmID).Msgf("Updating VM password")
+		err = client.ChangePassword(vmr, d.Get("password").(string))
+		if err != nil {
+                        return diag.FromErr(err)
+                }
+	}
+	// 5. Owner
+	if d.HasChange("account") {
+		logger.Debug().Int("vmid", vmID).Msgf("Updating VM owner %v", d.Get("account").(int))
+		err = client.ChangeOwner(vmr, d.Get("account").(int))
+		if err != nil {
+                        return diag.FromErr(err)
+                }
+	}
+	// 6. Disk
+	if d.HasChange("disk"){
+		config := vm6api.ConfigDisk{
+			Size: d.Get("disk").(int),
+			Id: d.Get("disk_id").(int),
+		}
+		logger.Debug().Int("vmid", vmID).Msgf("Updating VM with the following configuration: %+v", config)
+		err = config.UpdateDisk(client)
+		if err != nil {
+                        return diag.FromErr(err)
+                }
+	}
+	var diags diag.Diagnostics
+	lock.unlock()
+	return diags
 }
 
 func resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
@@ -212,6 +317,7 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domain", config.Domain)
 	d.Set("ipv4_number", len(config.IPv4))
 	d.Set("os", config.Os.Id)
+	d.Set("disk_id", config.QemuDisks.Id)
 
 	// DEBUG print out the read result
         flatValue, _ := resourceDataToFlatValues(d, thisResource)
