@@ -102,6 +102,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
                         "vmmanager6_vm_qemu":  resourceVmQemu(),
+                        "vmmanager6_network":  resourceNetwork(),
                 //        "vmmanager6_lxc":      resourceLxc(),
                 //        "vmmanager6_lxc_disk": resourceLxcDisk(),
                 //        "vmmanager6_pool":     resourcePool(),
