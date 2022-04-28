@@ -22,6 +22,7 @@ description: |-
 
 ### Optional
 
+- `cluster` (Number) id of Cluster where need to enable pool
 - `desc` (String) Pool Description
 - `id` (String) The ID of this resource.
 

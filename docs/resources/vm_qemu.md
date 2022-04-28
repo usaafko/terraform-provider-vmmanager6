@@ -30,7 +30,7 @@ description: |-
 - `account` (Number) VMmanager user id
 - `cluster` (Number) VMmanager 6 cluster id
 - `desc` (String) The VM description
-- `disk_id` (Number) Main disk ID of VM
+- `disk_id` (Number) Internal variable. Main disk ID of VM
 - `domain` (String) Domain for VM's ip addresses and hostname
 - `id` (String) The ID of this resource.
 - `ipv4_number` (Number) Number of ipv4 addresses

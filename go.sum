@@ -226,6 +226,8 @@ github.com/usaafko/vmmanager6-api-go v0.0.8 h1:xIMDrLSTEfnMjYTJSOmyCdwTq+88ShuED
 github.com/usaafko/vmmanager6-api-go v0.0.8/go.mod h1:3RSu8vvMTBiAInPrrwPVfm+r8pRGs532zBpn8tHC1DY=
 github.com/usaafko/vmmanager6-api-go v0.0.9 h1:CZU36l72BQdu33ReHRlcskdmsH9eg1FjzXv5hf2gEtY=
 github.com/usaafko/vmmanager6-api-go v0.0.9/go.mod h1:3RSu8vvMTBiAInPrrwPVfm+r8pRGs532zBpn8tHC1DY=
+github.com/usaafko/vmmanager6-api-go v0.0.10 h1:rQGFc8t19ba1IUbziJxfSMZ5JZOn2iQ6kpckU72S5/s=
+github.com/usaafko/vmmanager6-api-go v0.0.10/go.mod h1:3RSu8vvMTBiAInPrrwPVfm+r8pRGs532zBpn8tHC1DY=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=

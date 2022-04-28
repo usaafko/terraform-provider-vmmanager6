@@ -66,6 +66,9 @@ test:
 	@echo " -> testing code"
 	@go test -v ./...
 
+doc:
+	tfplugindocs
+
 build: clean
 	@echo " -> Building"
 	mkdir -p bin

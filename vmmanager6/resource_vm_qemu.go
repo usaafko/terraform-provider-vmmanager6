@@ -61,12 +61,13 @@ func resourceVmQemu() *schema.Resource {
 				Type:	  schema.TypeInt,
 				Optional:         true,
                                 Computed:         true,
-				Description:      "Main disk ID of VM",
+				Description:      "Internal variable. Main disk ID of VM",
 			},
 			"cluster": {
                                 Type:     schema.TypeInt,
                                 Optional: true,
                                 Default:     1,
+				ForceNew: true,
                                 Description: "VMmanager 6 cluster id",
 			},
 			"account": {
@@ -98,12 +99,14 @@ func resourceVmQemu() *schema.Resource {
 			"ipv4_number": {
 				Type:     schema.TypeInt,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Number of ipv4 addresses",
 				Default: 1,
 			},
 			"ipv4_pools": {
 				Type:	schema.TypeList,
                                 Required:    true,
+				ForceNew: true,
 				Description: "VMmanager ip pools, to use for ip assignment",
 				Elem: &schema.Schema{
                                         Type: schema.TypeInt,
