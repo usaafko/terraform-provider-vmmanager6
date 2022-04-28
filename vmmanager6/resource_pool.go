@@ -68,10 +68,10 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
         client := pconf.Client
 
 	//check if pool exists
-	
+
 	vmid, err := client.GetPoolIdByName(d.Get("pool").(string))
 	if err != nil {
-		return nil
+		return err
 	}
 	if vmid != "0" {
 		//Pool already exists
@@ -96,12 +96,67 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(vmid)
 	logger.Debug().Msgf("Finished Pool read resulting in data: '%+v'", string(jsonString))
-	
+
 	log.Print("[DEBUG][PoolCreate] vm creation done!")
         return nil
 }
 
 func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	pconf := meta.(*providerConfiguration)
+        lock := pmParallelBegin(pconf)
+
+        defer lock.unlock()
+	// create a logger for this function
+        logger, _ := CreateSubLogger("resource_pool_update")
+
+	client := pconf.Client
+	logger.Info().Msg("Starting update of the pool resource")
+	config, err := client.GetPoolInfo(d.Id())
+	if err != nil {
+                d.SetId("")
+                return nil
+        }
+	
+	if d.HasChanges("pool", "desc") {
+		err = client.UpdatePoolSettings(d.Id(), d.Get("pool").(string), d.Get("desc").(string))
+		logger.Info().Msg("Change pool name and desc")
+		if err != nil {
+			logger.Error().Msgf("Can't update pool %v", err)
+			return diag.FromErr(err)
+		}
+	}
+	if d.HasChange("ranges"){
+		oldValuesRaw, newValuesRaw := d.GetChange("ranges")
+                oldValues := oldValuesRaw.([]interface{})
+                newValues := newValuesRaw.([]interface{})
+		for i := range oldValues {
+			if ! InterfaceStringsContains(newValues, oldValues[i]) { //remove something
+				curRanges := config["ipnets"].([]interface{})
+				for _, v := range curRanges {
+					testRange := v.(map[string]interface{})["name"].(string)
+					if oldValues[i].(string) == testRange {
+						logger.Debug().Msgf("Delete range from pool %v", testRange)
+						err = client.DeletePoolRange(int(v.(map[string]interface{})["id"].(float64)))
+						if err != nil {
+							return diag.FromErr(err)
+						}
+					}
+				}
+
+			}
+		}
+		for i := range newValues {
+			if ! InterfaceStringsContains(oldValues, newValues[i]) { //that's new value
+				logger.Debug().Msgf("Add range to pool %v", newValues[i].(string))
+				err = client.CreatePoolRange(d.Id(), newValues[i].(string))
+				if err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+
+	}
+	logger.Info().Msg("End of update of the pool resource")
 	return nil
 }
 
@@ -147,7 +202,11 @@ func _resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("pool", config.Name)
 	d.Set("desc", config.Note)
-	
+	var getRanges []string
+	for _,val := range config.Ranges{
+		getRanges = append(getRanges, val.Range)
+	}
+	d.Set("ranges", getRanges)
 	// DEBUG print out the read result
         flatValue, _ := resourceDataToFlatValues(d, poolResource)
         jsonString, _ := json.Marshal(flatValue)

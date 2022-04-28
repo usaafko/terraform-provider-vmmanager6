@@ -243,3 +243,12 @@ func resourceDataToFlatValues(d *schema.ResourceData, resource *schema.Resource)
 
         return flatValues, nil
 }
+
+func InterfaceStringsContains(s []interface{}, str interface{}) bool {
+	for _, v := range s {
+		if v.(string) == str.(string) {
+			return true
+		}
+	}
+	return false
+}

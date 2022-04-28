@@ -64,12 +64,26 @@ func resourceNetworkCreate(d *schema.ResourceData, meta interface{}) error {
         //defer lock.unlock()
         client := pconf.Client
 
+	//check if network exists
+	
+	vmid, err := client.GetNetworkIdByName(d.Get("network").(string))
+	if err != nil {
+		return nil
+	}
+	if vmid != "0" {
+		//Network already exists
+		logger.Debug().Msgf("Network already exists id %v", vmid)
+		d.SetId(vmid)
+		_resourceNetworkRead(d, meta)
+		return nil
+	}
+
 	config := vm6api.ConfigNewNetwork{
                 Name:         d.Get("network").(string),
                 Gateway:      d.Get("gateway").(string),
                 Note:         d.Get("desc").(string),
 	}
-	vmid, err := config.CreateNetwork(client)
+	vmid, err = config.CreateNetwork(client)
 	if err != nil {
 		return err
 	}
