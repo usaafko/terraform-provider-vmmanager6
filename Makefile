@@ -66,9 +66,6 @@ test:
 	@echo " -> testing code"
 	@go test -v ./...
 
-doc:
-	tfplugindocs
-
 build: clean
 	@echo " -> Building"
 	mkdir -p bin
@@ -84,3 +81,12 @@ local-dev-install: build
 	@echo "$(ARCH)"
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/$(CURRENT_VERSION_MICRO)/$(KERNEL)_$(ARCH)/
 	cp bin/${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/$(CURRENT_VERSION_MICRO)/$(KERNEL)_$(ARCH)/
+
+minor_release:
+	tfplugindocs
+	git add .
+	git commit -m "${COMMIT_MESSAGE}"
+	git tag $(CURRENT_TAG_MICRO)
+	git push
+	git push origin $(CURRENT_TAG_MICRO)
+
