@@ -47,6 +47,12 @@ func resourcePool() *schema.Resource {
                                 Description: "Pool Description",
                                 Default: "",
                         },
+			"cluster": {
+                                Type:     schema.TypeInt,
+                                Optional: true,
+                                Description: "id of Cluster where need to enable pool",
+                                Default: 1,
+                        },
 
 
 		},
@@ -89,6 +95,7 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
                 Name:         d.Get("pool").(string),
                 Note:         d.Get("desc").(string),
                 Ranges:       myRanges,
+		Cluster:      d.Get("cluster").(int),
 	}
 	vmid, err = config.CreatePool(client)
 	if err != nil {

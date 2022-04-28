@@ -68,7 +68,7 @@ func resourceNetworkCreate(d *schema.ResourceData, meta interface{}) error {
 	
 	vmid, err := client.GetNetworkIdByName(d.Get("network").(string))
 	if err != nil {
-		return nil
+		return err
 	}
 	if vmid != "0" {
 		//Network already exists
