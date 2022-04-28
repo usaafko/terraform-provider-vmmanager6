@@ -64,8 +64,22 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
 
 	pconf := meta.(*providerConfiguration)
         lock := pmParallelBegin(pconf)
-        //defer lock.unlock()
+        defer lock.unlock()
         client := pconf.Client
+
+	//check if pool exists
+	
+	vmid, err := client.GetPoolIdByName(d.Get("pool").(string))
+	if err != nil {
+		return nil
+	}
+	if vmid != "0" {
+		//Pool already exists
+		logger.Debug().Msgf("Pool already exists id %v", vmid)
+		d.SetId(vmid)
+		_resourcePoolRead(d, meta)
+		return nil
+	}
 	genRanges := d.Get("ranges").([]interface{})
 	var myRanges []string
 	for _, Range := range genRanges {
@@ -76,7 +90,7 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
                 Note:         d.Get("desc").(string),
                 Ranges:       myRanges,
 	}
-	vmid, err := config.CreatePool(client)
+	vmid, err = config.CreatePool(client)
 	if err != nil {
 		return err
 	}
@@ -84,7 +98,6 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	logger.Debug().Msgf("Finished Pool read resulting in data: '%+v'", string(jsonString))
 	
 	log.Print("[DEBUG][PoolCreate] vm creation done!")
-        lock.unlock()
         return nil
 }
 
@@ -123,14 +136,7 @@ func _resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
                 d.SetId("")
                 return nil
         }
-        vmid, err := client.GetPoolIdByName(d.Get("pool").(string))
-        if err != nil {
-                d.SetId("")
-                return nil
-        } else {
-        	d.SetId(vmid)
-        }
-        
+
         config, err := vm6api.NewConfigPoolFromApi(d.Id(), client)
         if err != nil {
                 return err
