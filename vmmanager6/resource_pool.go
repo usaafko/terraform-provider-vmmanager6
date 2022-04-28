@@ -123,6 +123,14 @@ func _resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
                 d.SetId("")
                 return nil
         }
+        vmid, err := client.GetPoolIdByName(d.Get("pool").(string))
+        if err != nil {
+                d.SetId("")
+                return nil
+        } else {
+        	d.SetId(vmid)
+        }
+        
         config, err := vm6api.NewConfigPoolFromApi(d.Id(), client)
         if err != nil {
                 return err
