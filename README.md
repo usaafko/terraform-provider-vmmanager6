@@ -37,6 +37,31 @@ resource "vmmanager6_pool" "pool1" {
   depends_on = [vmmanager6_network.net1]
 }
 
+resource "vmmanager6_account" "user" {
+  email = "user@user.com"
+  password = "asdh49@Aas"
+  role = "@advanced_user"
+}
+
+resource "vmmanager6_vm_qemu" "vm1" {
+  name = "mein"
+  desc = "testing terraform"
+  cores = 1
+  memory = 1024
+  disk = 6000
+  os = 1
+  password = "@1231sdas"
+  cluster = 1
+  account = "${vmmanager6_account.user.id}"
+  domain = "mein.example.com"
+  depends_on = [vmmanager6_network.net1, vmmanager6_pool.pool1, vmmanager6_account.user ]
+  ipv4_pools = [ "${vmmanager6_pool.pool1.id}" ]
+  ipv4_number = 1
+  recipes {
+        recipe = 11
+  }
+}
+
 resource "vmmanager6_vm_qemu" "vm2" {
   name = "mein"
   desc = "testing terraform"
@@ -48,21 +73,19 @@ resource "vmmanager6_vm_qemu" "vm2" {
   cluster = 1
   account = "${vmmanager6_account.user.id}"
   domain = "mein.example.com"
-  depends_on = [vmmanager6_network.net1, vmmanager6_pool.pool1, vmmanager6_account.ilya ]
+  depends_on = [vmmanager6_network.net1, vmmanager6_pool.pool1, vmmanager6_account.user, vmmanager6_vm_qemu.vm1 ]
   ipv4_pools = [ "${vmmanager6_pool.pool1.id}" ]
   ipv4_number = 1
   recipes {
         recipe = 12
         recipe_params {
-                name = "ZABBIX_SERVER"
-                value = "${vmmanager6_vm_qemu.zabbix_server.ip_addresses[0].addr}"
+                name = "SERVER"
+                value = "${vmmanager6_vm_qemu.vm1.ip_addresses[0].addr}"
+        }
+        recipe_params {
+                name = "COMMENT"
+                value = "Some comment"
         }
   }
-}
-
-resource "vmmanager6_account" "user" {
-  email = "user@user.com"
-  password = "asdh49@Aas"
-  role = "@advanced_user"
 }
 ```
