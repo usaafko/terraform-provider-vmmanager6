@@ -209,27 +209,12 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Collect recipes from config
-	// recipes_config := d.Get("recipes").([]interface{})
-	// var recipes_api []vm6api.RecipeConfig
-	
-	// for _, recipe_raw := range recipes_config {
-	// 	var recipe_api vm6api.RecipeConfig
-	// 	var recipe_api_params []vm6api.RecipeParamsConfig
-	// 	recipe := recipe.(map[string]interface{})
-	// 	recipe_api.Recipe = recipe["recipe"].int()
-	// 	recipe_params_raw = recipe["recipe_params"].([]interface{})
-	// 	for _, recipe_param_raw := range recipe_params_raw {
-	// 		recipe_param := recipe_param_raw.(map[string]interface{})
-	// 		var recipe_api_param vm6api.RecipeParamsConfig
-	// 		recipe_api_param.Name = recipe_param["name"]
-	// 	}
-	// }
 	recipes_config := d.Get("recipes").([]interface{})
 	var recipes_api []vm6api.RecipeConfig
 
 	j, err := json.Marshal(recipes_config)
-    	err = json.Unmarshal(j, &recipes_api)
-    	if err != nil {
+	err = json.Unmarshal(j, &recipes_api)
+	if err != nil {
 		return err
 	}
 
