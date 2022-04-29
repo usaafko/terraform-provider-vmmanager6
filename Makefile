@@ -85,7 +85,7 @@ local-dev-install: build
 minor_release:
 	tfplugindocs
 	git add .
-	git commit -m "${COMMIT_MESSAGE}"
+	git commit -m "${COMMIT_MESSAGE}" || :
 	git tag $(CURRENT_TAG_MICRO)
 	git push
 	git push origin $(CURRENT_TAG_MICRO)
