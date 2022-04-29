@@ -24,9 +24,22 @@ description: |-
 
 - `id` (String) The ID of this resource.
 - `role` (String) User role, must be @admin or @advanced_user or @user
+- `ssh_keys` (Block List) Set of public ssh keys for account (see [below for nested schema](#nestedblock--ssh_keys))
 
 ### Read-Only
 
 - `state` (String) Internal - user state
+
+<a id="nestedblock--ssh_keys"></a>
+### Nested Schema for `ssh_keys`
+
+Required:
+
+- `name` (String) name of public ssh key
+- `ssh_pub_key` (String) public ssh key
+
+Read-Only:
+
+- `id` (Number) id of public ssh key
 
 
