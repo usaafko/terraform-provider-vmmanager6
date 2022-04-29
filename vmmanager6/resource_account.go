@@ -57,6 +57,30 @@ func resourceAccount() *schema.Resource {
                                 Description: "User password",
                                 ForceNew: true,
                         },
+                        "ssh_keys": {
+                        	schema.TypeList,
+                        	Optional: true,
+                        	Description: "Set of public ssh keys for account",
+                        	Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type: schema.TypeInt,
+							Computed: true,
+							Description: "id of public ssh key",
+						},
+						"name": {
+							Type: schema.TypeString,
+							Required: true,
+							Description: "name of public ssh key",
+						},
+						"key": {
+							Type: schema.TypeString,
+							Required: true,
+							Description: "public ssh key",
+						},
+					},
+				},
+                        },
 		},
 		}
         return accountResource
@@ -101,6 +125,29 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(vmid)
 	logger.Debug().Msgf("Finished account read resulting in data: '%+v'", string(jsonString))
 	
+	// Collect ssh keys from config
+	ssh_keys_config := d.Get("ssh_keys").([]interface{})
+	var ssh_keys_api []vm6api.SshKeyConfig
+
+	j, err := json.Marshal(ssh_keys_config)
+	err = json.Unmarshal(j, &ssh_keys_api)
+	if err != nil {
+		return err
+	}
+	if len(ssh_keys_api) > 0 {
+		// set up ssh keys
+		for _, key := range ssh_keys_api {
+			err = client.AccountAddSshKey(vmid, key)
+			if err != nil {
+				return err
+			}
+		}
+		err = _resourceAccountRead(d, meta)
+		if err != nil {
+			return err
+		}
+	}
+
 	log.Print("[DEBUG][AccountCreate] creation done!")
         lock.unlock()
         return nil
@@ -130,6 +177,10 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
         }
+        if d.HasChange("ssh_keys"){
+        	// TODO: add ssh change
+        }
+
         logger.Info().Msg("End of update of the account resource")
 	return nil
 }
@@ -173,6 +224,10 @@ func _resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("state", config.State)
 	d.Set("role", config.Role)
 	
+	// Get ssh keys
+	ssh_keys, err = client.AccountGetSshKeys(d.Id())
+	d.Set("ssh_keys", ssh_keys)
+
 	// DEBUG print out the read result
         flatValue, _ := resourceDataToFlatValues(d, accountResource)
         jsonString, _ := json.Marshal(flatValue)
