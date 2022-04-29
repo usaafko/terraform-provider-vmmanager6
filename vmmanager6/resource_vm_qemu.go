@@ -79,7 +79,6 @@ func resourceVmQemu() *schema.Resource {
 			"domain": {
                                 Type:     schema.TypeString,
                                 Required: true,
-                                Default:     "",
                                 Description: "Domain for VM's ip addresses and hostname",
 			},
 			"password": {
@@ -113,14 +112,14 @@ func resourceVmQemu() *schema.Resource {
                                 },
 			},
 			"ip_addresses": {
-				Type.schema.TypeList,
+				Type: schema.TypeList,
 				Computed: true,
 				Description: "Internal. List of vms ip addresses",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"domain": {
 							Type: schema.TypeString,
-							Computed: true
+							Computed: true,
 						},
 						"family": {
 							Type: schema.TypeInt,
@@ -130,7 +129,7 @@ func resourceVmQemu() *schema.Resource {
 							Type: schema.TypeInt,
 							Computed: true,
 						},
-						"netId": {
+						"netid": {
 							Type: schema.TypeInt,
 							Computed: true,
 						},
@@ -302,7 +301,21 @@ func resourceVmQemuUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	// 7. Domain
 	if d.HasChange("domain"){
-
+		vmIps := d.Get("ip_addresses").([]interface{})
+		flatIpConfig := make([]map[string]interface{}, 0, 1)
+		newdomain := d.Get("domain").(string)
+		for _, vmIp := range vmIps {
+			thisIp := vmIp.(map[string]interface{})
+			vmIpId := thisIp["id"].(int)
+			// change ptr for that ip
+			err = client.UpdatePtr(vmIpId, newdomain)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			thisIp["domain"] = newdomain
+			flatIpConfig = append(flatIpConfig, thisIp)
+		}
+		d.Set("ip_addresses", flatIpConfig)
 	}
 	var diags diag.Diagnostics
 	lock.unlock()
@@ -386,19 +399,23 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
         if err != nil {
                 return err
         }
-        
+
         flatIpConfig := make([]map[string]interface{}, 0, 1)
         for _, thisip := range ipconfig {
-        	thisFlattenedIp := make(map[string]interface{})
-        	for k,v := range thisip {
-        		thisFlattenedIp[k] = v
-        	}
-        	flatIpConfig = append(flatIpConfig, thisFlattenedIp)
-        }
-	if d.Set("ip_addresses", flatDisks); err != nil {
+		thisFlattenedIp := make(map[string]interface{})
+		thisFlattenedIp["domain"] = thisip.Domain
+		thisFlattenedIp["family"] = thisip.Family
+		thisFlattenedIp["id"] = thisip.Id
+		thisFlattenedIp["netid"] = thisip.NetId
+		thisFlattenedIp["gateway"] = thisip.Gateway
+		thisFlattenedIp["addr"] = thisip.Addr
+		thisFlattenedIp["mask"] = thisip.Mask
+		flatIpConfig = append(flatIpConfig, thisFlattenedIp)
+	}
+	if d.Set("ip_addresses", flatIpConfig); err != nil {
 		return err
 	}
-	
+
 	// DEBUG print out the read result
         flatValue, _ := resourceDataToFlatValues(d, thisResource)
         jsonString, _ := json.Marshal(flatValue)
