@@ -2,15 +2,15 @@ package vmmanager6
 
 import (
 	"context"
-//	"strings"
+	//	"strings"
 	"log"
-//	"strconv"
-//	"fmt"
+	//	"strconv"
+	//	"fmt"
 	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-        "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	vm6api "github.com/usaafko/vmmanager6-api-go"
-//        "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // using a global variable here so that we have an internally accessible
@@ -55,6 +55,7 @@ func resourceAccount() *schema.Resource {
                                 Required: true,
                                 Sensitive: true,
                                 Description: "User password",
+                                ForceNew: true,
                         },
 		},
 		}
@@ -123,7 +124,11 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
         }
 
         if d.HasChange("role"){
-		//TODO: change user role
+		err = client.ChangeAccountRole(d.Id(), d.Get("role").(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
         }
         logger.Info().Msg("End of update of the account resource")
 	return nil
@@ -165,8 +170,8 @@ func _resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 
         logger.Debug().Msgf("[READ] Received Account Config from VMmanager6 API: %+v", config)
 
-	d.Set("state") = config.State
-	d.Set("role") = config.Role
+	d.Set("state", config.State)
+	d.Set("role", config.Role)
 	
 	// DEBUG print out the read result
         flatValue, _ := resourceDataToFlatValues(d, accountResource)

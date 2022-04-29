@@ -104,6 +104,7 @@ func Provider() *schema.Provider {
                         "vmmanager6_vm_qemu":  resourceVmQemu(),
                         "vmmanager6_network":  resourceNetwork(),
                         "vmmanager6_pool":     resourcePool(),
+                        "vmmanager6_account":     resourceAccount(),
                 //        "vmmanager6_lxc":      resourceLxc(),
                 //        "vmmanager6_lxc_disk": resourceLxcDisk(),
                 //        "vmmanager6_pool":     resourcePool(),
