@@ -108,19 +108,19 @@ func resourceNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	client := pconf.Client
 	logger.Info().Msg("Starting update of the network resource")
 
-	config, err := client.GetNetworkInfo(d.Id())
+	_, err := client.GetNetworkInfo(d.Id())
 	if err != nil {
                 d.SetId("")
                 return nil
         }
 
         if d.HasChange("desc"){
-        	err = client.UpdateNetworkDescription(d.Id(), d.Get("desc").(string))
+		err = client.UpdateNetworkDescription(d.Id(), d.Get("desc").(string))
 		logger.Info().Msg("Change network desc")
 		if err != nil {
 			logger.Error().Msgf("Can't update network %v", err)
 			return diag.FromErr(err)
-		}	
+		}
         }
         logger.Info().Msg("End of update of the network resource")
 	return nil
