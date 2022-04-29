@@ -51,6 +51,13 @@ resource "vmmanager6_vm_qemu" "vm2" {
   depends_on = [vmmanager6_network.net1, vmmanager6_pool.pool1, vmmanager6_account.ilya ]
   ipv4_pools = [ "${vmmanager6_pool.pool1.id}" ]
   ipv4_number = 1
+  recipes {
+        recipe = 12
+        recipe_params {
+                name = "ZABBIX_SERVER"
+                value = "${vmmanager6_vm_qemu.zabbix_server.ip_addresses[0].addr}"
+        }
+  }
 }
 
 resource "vmmanager6_account" "user" {
