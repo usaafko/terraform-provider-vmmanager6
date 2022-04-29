@@ -19,6 +19,7 @@ description: |-
 
 - `cores` (Number) Number of vCPU's for VM
 - `disk` (Number) Disk Size of VM in Megabytes
+- `domain` (String) Domain for VM's ip addresses and hostname
 - `ipv4_pools` (List of Number) VMmanager ip pools, to use for ip assignment
 - `memory` (Number) RAM Size of VM in Megabytes
 - `name` (String) The VM name
@@ -31,8 +32,24 @@ description: |-
 - `cluster` (Number) VMmanager 6 cluster id
 - `desc` (String) The VM description
 - `disk_id` (Number) Internal variable. Main disk ID of VM
-- `domain` (String) Domain for VM's ip addresses and hostname
 - `id` (String) The ID of this resource.
 - `ipv4_number` (Number) Number of ipv4 addresses
+
+### Read-Only
+
+- `ip_addresses` (List of Object) Internal. List of vms ip addresses (see [below for nested schema](#nestedatt--ip_addresses))
+
+<a id="nestedatt--ip_addresses"></a>
+### Nested Schema for `ip_addresses`
+
+Read-Only:
+
+- `addr` (String)
+- `domain` (String)
+- `family` (Number)
+- `gateway` (String)
+- `id` (Number)
+- `mask` (String)
+- `netid` (Number)
 
 
