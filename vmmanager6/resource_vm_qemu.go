@@ -148,6 +148,40 @@ func resourceVmQemu() *schema.Resource {
 					},
 				},
 			},
+			"recipes": {
+				Type: schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Description: "Array of recipes and params",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"recipe": {
+							Type: schema.TypeInt,
+							Required: true,
+							Description: "id of recipe"
+						},
+						"recipe_params": {
+							Type: schema.TypeList,
+							Optional: true,
+							Description: "Array of recipe params",
+							&schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type: schema.TypeString,
+										Required: true,
+										Description: "param name",
+									},
+									"value": {
+										Type: schema.TypeString,
+										Required: true,
+										Description: "param value",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 
 		},
 	}
@@ -166,11 +200,39 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
         lock := pmParallelBegin(pconf)
         //defer lock.unlock()
         client := pconf.Client
+
+	// Collect pools from config
 	ipv4_pools := d.Get("ipv4_pools").([]interface{})
 	var ipv4_pools_int []int
 	for _, ippool := range ipv4_pools {
 		ipv4_pools_int = append(ipv4_pools_int, ippool.(int))
 	}
+
+	// Collect recipes from config
+	// recipes_config := d.Get("recipes").([]interface{})
+	// var recipes_api []vm6api.RecipeConfig
+	
+	// for _, recipe_raw := range recipes_config {
+	// 	var recipe_api vm6api.RecipeConfig
+	// 	var recipe_api_params []vm6api.RecipeParamsConfig
+	// 	recipe := recipe.(map[string]interface{})
+	// 	recipe_api.Recipe = recipe["recipe"].int()
+	// 	recipe_params_raw = recipe["recipe_params"].([]interface{})
+	// 	for _, recipe_param_raw := range recipe_params_raw {
+	// 		recipe_param := recipe_param_raw.(map[string]interface{})
+	// 		var recipe_api_param vm6api.RecipeParamsConfig
+	// 		recipe_api_param.Name = recipe_param["name"]
+	// 	}
+	// }
+	recipes_config := d.Get("recipes").([]interface{})
+	var recipes_api []vm6api.RecipeConfig
+
+	j, err := json.Marshal(recipes_config)
+    	err = json.Unmarshal(j, &recipes_api)
+    	if err != nil {
+		return err
+	}
+
 	config := vm6api.ConfigNewQemu{
                 Name:         d.Get("name").(string),
                 Description:  d.Get("desc").(string),
@@ -184,6 +246,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		IPv4:         d.Get("ipv4_number").(int),
 		Os:           d.Get("os").(int),
 		IPv4Pools:    ipv4_pools_int,
+		Recipes:      recipes_api,
 	}
 	vmid, err := config.CreateVm(client)
 	if err != nil {
