@@ -41,6 +41,10 @@ resource "vmmanager6_account" "user" {
   email = "user@user.com"
   password = "asdh49@Aas"
   role = "@advanced_user"
+  ssh_keys {
+    name = "testing"
+    ssh_pub_key = "ssh-rsa blabla"
+  }
 }
 
 resource "vmmanager6_vm_qemu" "vm1" {

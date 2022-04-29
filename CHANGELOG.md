@@ -4,6 +4,7 @@
 * Qemu domain change
 * Account resource
 * Add recipes with params
+* Add SSH public keys to account resource
 
 ## 2022-04-28
 * Add pools edit

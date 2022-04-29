@@ -2,7 +2,7 @@ package vmmanager6
 
 import (
 	"context"
-	//	"strings"
+	"strings"
 	"log"
 	//	"strconv"
 	//	"fmt"
@@ -58,10 +58,10 @@ func resourceAccount() *schema.Resource {
                                 ForceNew: true,
                         },
                         "ssh_keys": {
-                        	schema.TypeList,
-                        	Optional: true,
-                        	Description: "Set of public ssh keys for account",
-                        	Elem: &schema.Resource{
+				Type: schema.TypeList,
+				Optional: true,
+				Description: "Set of public ssh keys for account",
+				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type: schema.TypeInt,
@@ -73,10 +73,13 @@ func resourceAccount() *schema.Resource {
 							Required: true,
 							Description: "name of public ssh key",
 						},
-						"key": {
+						"ssh_pub_key": {
 							Type: schema.TypeString,
 							Required: true,
 							Description: "public ssh key",
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return strings.TrimSpace(old) == strings.TrimSpace(new)
+							},
 						},
 					},
 				},
@@ -96,11 +99,11 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 
 	pconf := meta.(*providerConfiguration)
         lock := pmParallelBegin(pconf)
-        //defer lock.unlock()
+        defer lock.unlock()
         client := pconf.Client
 
 	//check if account exists
-	
+
 	vmid, err := client.GetAccountIdByEmail(d.Get("email").(string))
 	if err != nil {
 		return err
@@ -115,7 +118,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 
 	config := vm6api.ConfigNewAccount{
                 Email:		d.Get("email").(string),
-                Role:      	d.Get("role").(string),
+		Role:		d.Get("role").(string),
                 Password:       d.Get("password").(string),
 	}
 	vmid, err = config.CreateAccount(client)
@@ -124,7 +127,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(vmid)
 	logger.Debug().Msgf("Finished account read resulting in data: '%+v'", string(jsonString))
-	
+
 	// Collect ssh keys from config
 	ssh_keys_config := d.Get("ssh_keys").([]interface{})
 	var ssh_keys_api []vm6api.SshKeyConfig
@@ -137,19 +140,20 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	if len(ssh_keys_api) > 0 {
 		// set up ssh keys
 		for _, key := range ssh_keys_api {
+			logger.Debug().Msgf("adding key %#v", key)
 			err = client.AccountAddSshKey(vmid, key)
 			if err != nil {
 				return err
 			}
 		}
-		err = _resourceAccountRead(d, meta)
+		ssh_keys, err := client.AccountGetSshKeys(d.Id())
 		if err != nil {
 			return err
 		}
+		d.Set("ssh_keys", ssh_keys)
 	}
 
 	log.Print("[DEBUG][AccountCreate] creation done!")
-        lock.unlock()
         return nil
 }
 
@@ -223,9 +227,9 @@ func _resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("state", config.State)
 	d.Set("role", config.Role)
-	
+
 	// Get ssh keys
-	ssh_keys, err = client.AccountGetSshKeys(d.Id())
+	ssh_keys, err := client.AccountGetSshKeys(d.Id())
 	d.Set("ssh_keys", ssh_keys)
 
 	// DEBUG print out the read result
