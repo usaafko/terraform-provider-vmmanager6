@@ -3,6 +3,7 @@
 * Network change
 * Qemu domain change
 * Account resource
+* Add recipes with params
 
 ## 2022-04-28
 * Add pools edit
