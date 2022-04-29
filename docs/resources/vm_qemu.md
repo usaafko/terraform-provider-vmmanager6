@@ -34,10 +34,32 @@ description: |-
 - `disk_id` (Number) Internal variable. Main disk ID of VM
 - `id` (String) The ID of this resource.
 - `ipv4_number` (Number) Number of ipv4 addresses
+- `recipes` (Block List) Array of recipes and params (see [below for nested schema](#nestedblock--recipes))
 
 ### Read-Only
 
 - `ip_addresses` (List of Object) Internal. List of vms ip addresses (see [below for nested schema](#nestedatt--ip_addresses))
+
+<a id="nestedblock--recipes"></a>
+### Nested Schema for `recipes`
+
+Required:
+
+- `recipe` (Number) id of recipe
+
+Optional:
+
+- `recipe_params` (Block List) Array of recipe params (see [below for nested schema](#nestedblock--recipes--recipe_params))
+
+<a id="nestedblock--recipes--recipe_params"></a>
+### Nested Schema for `recipes.recipe_params`
+
+Required:
+
+- `name` (String) param name
+- `value` (String) param value
+
+
 
 <a id="nestedatt--ip_addresses"></a>
 ### Nested Schema for `ip_addresses`
