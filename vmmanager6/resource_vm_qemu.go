@@ -159,22 +159,26 @@ func resourceVmQemu() *schema.Resource {
 							Type: schema.TypeInt,
 							Required: true,
 							Description: "id of recipe",
+							ForceNew: true,
 						},
 						"recipe_params": {
 							Type: schema.TypeList,
 							Optional: true,
 							Description: "Array of recipe params",
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type: schema.TypeString,
 										Required: true,
 										Description: "param name",
+										ForceNew: true,
 									},
 									"value": {
 										Type: schema.TypeString,
 										Required: true,
 										Description: "param value",
+										ForceNew: true,
 									},
 								},
 							},
