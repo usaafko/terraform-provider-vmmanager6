@@ -32,11 +32,13 @@ func resourceNetwork() *schema.Resource {
 				Type:        schema.TypeString,
                                 Required:    true,
                                 Description: "Ipv4 or Ipv6 Network in CIDR format",
+                                ForceNew: true,
 			},
 			"gateway": {
                                 Type:     schema.TypeString,
                                 Required:    true,
                                 Description: "Ip address of gateway",
+                                ForceNew: true,
                         },
 			"desc": {
                                 Type:     schema.TypeString,
@@ -96,6 +98,31 @@ func resourceNetworkCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	pconf := meta.(*providerConfiguration)
+        lock := pmParallelBegin(pconf)
+
+        defer lock.unlock()
+	// create a logger for this function
+        logger, _ := CreateSubLogger("resource_network_update")
+
+	client := pconf.Client
+	logger.Info().Msg("Starting update of the network resource")
+
+	config, err := client.GetNetworkInfo(d.Id())
+	if err != nil {
+                d.SetId("")
+                return nil
+        }
+
+        if d.HasChange("desc"){
+        	err = client.UpdateNetworkDescription(d.Id(), d.Get("desc").(string))
+		logger.Info().Msg("Change network desc")
+		if err != nil {
+			logger.Error().Msgf("Can't update network %v", err)
+			return diag.FromErr(err)
+		}	
+        }
+        logger.Info().Msg("End of update of the network resource")
 	return nil
 }
 
