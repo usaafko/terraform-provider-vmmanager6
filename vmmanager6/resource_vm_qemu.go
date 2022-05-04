@@ -129,15 +129,16 @@ func resourceVmQemu() *schema.Resource {
 							Optional: true,
 							Description: "Ip address to apply",
 						},
-						"ip_pool": {
+						"ippool": {
 							Type: schema.TypeInt,
 							Optional: true,
-							Description: "Pool of ip addresses to apply"
+							Description: "Pool of ip addresses to apply",
 						},
 						"ip_count": {
 							Type: schema.TypeInt,
 							Optional: true,
-							Description: "How many ips add to this interface from ip_pool"
+							Description: "How many ips add to this interface from ip_pool",
+							Default: 1,
 						},
 					},
 				},
