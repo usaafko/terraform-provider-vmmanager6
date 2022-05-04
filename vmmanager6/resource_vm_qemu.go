@@ -296,6 +296,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		IPv4Pools:    ipv4_pools_int,
 		Recipes:      recipes_api,
 		CustomInterfaces: d.Get("custom_interfaces").([]interface{}),
+		Vxlans: d.Get("vxlan").([]interface{}),
 	}
 	vmid, err := config.CreateVm(client)
 	if err != nil {
