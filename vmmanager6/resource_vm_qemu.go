@@ -98,9 +98,7 @@ func resourceVmQemu() *schema.Resource {
 			"ipv4_number": {
 				Type:     schema.TypeInt,
 				Optional:    true,
-				ForceNew: true,
 				Description: "Number of ipv4 addresses",
-				Default: 1,
 			},
 			"ipv4_pools": {
 				Type:	schema.TypeList,
