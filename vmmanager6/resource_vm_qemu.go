@@ -104,12 +104,69 @@ func resourceVmQemu() *schema.Resource {
 			},
 			"ipv4_pools": {
 				Type:	schema.TypeList,
-                                Required:    true,
+                                Optional:    true,
 				ForceNew: true,
 				Description: "VMmanager ip pools, to use for ip assignment",
 				Elem: &schema.Schema{
                                         Type: schema.TypeInt,
                                 },
+			},
+			"custom_interfaces": {
+				Type:	schema.TypeList,
+                                Optional:    true,
+				ForceNew: true,
+				Description: "You can set some ip address manually (use ip_name) or using pool id (ip_pool)",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bridge": {
+							Type: schema.TypeString,
+							Description: "Bridge name for interface",
+							Optional: true,
+							Default: "vmbr0",
+						},
+						"ip_name": {
+							Type: schema.TypeString,
+							Optional: true,
+							Description: "Ip address to apply",
+						},
+						"ip_pool": {
+							Type: schema.TypeInt,
+							Optional: true,
+							Description: "Pool of ip addresses to apply"
+						},
+						"ip_count": {
+							Type: schema.TypeInt,
+							Optional: true,
+							Description: "How many ips add to this interface from ip_pool"
+						},
+					},
+				},
+			},
+			"vxlan": {
+				Type: schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Description: "Use vxlan to create VM in local network without public ips, or mix it with custom_interfaces",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type: schema.TypeInt,
+							Required: true,
+							Description: "id of VxLAN",
+						},
+						"ipnet": {
+							Type: schema.TypeInt,
+							Required: true,
+							Description: "id of network inside VxLAN",
+						},
+						"ipv4_number": {
+							Type: schema.TypeInt,
+							Optional: true,
+							Description: "How many ips from VxLAN needed",
+							Default: 1,
+						},
+					},
+				},
 			},
 			"ip_addresses": {
 				Type: schema.TypeList,
@@ -222,6 +279,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+
 	config := vm6api.ConfigNewQemu{
                 Name:         d.Get("name").(string),
                 Description:  d.Get("desc").(string),
@@ -236,6 +294,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		Os:           d.Get("os").(int),
 		IPv4Pools:    ipv4_pools_int,
 		Recipes:      recipes_api,
+		CustomInterfaces: d.Get("custom_interfaces").([]interface{}),
 	}
 	vmid, err := config.CreateVm(client)
 	if err != nil {
