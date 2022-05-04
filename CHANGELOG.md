@@ -1,3 +1,9 @@
+## 2022-05-04
+
+* Add support for custom interfaces 
+* Add VxLAN resource
+* Add support for vxlan only VMs
+
 ## 2022-04-29
 
 * Network change

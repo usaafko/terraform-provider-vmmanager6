@@ -47,6 +47,18 @@ resource "vmmanager6_account" "user" {
   }
 }
 
+resource "vmmanager6_vxlan" "vxlan1" {
+  name = "test"
+  account = "${vmmanager6_account.user.id}"
+  depends_on = [ vmmanager6_account.user ]
+  clusters = [ 1 ]
+  comment = "Testing VxLAN from Terraform"
+  ipnets {
+    name = "10.0.0.0/24"
+    gateway = "10.0.0.1"
+  }
+}
+
 resource "vmmanager6_vm_qemu" "vm1" {
   name = "mein"
   desc = "testing terraform"
@@ -64,6 +76,10 @@ resource "vmmanager6_vm_qemu" "vm1" {
   recipes {
         recipe = 11
   }
+  vxlan {
+    id = "${vmmanager6_vxlan.vxlan1.id}"
+    ipnet = "${vmmanager6_vxlan.vxlan1.ipnets[0].id}"
+  }
 }
 
 resource "vmmanager6_vm_qemu" "vm2" {
@@ -77,14 +93,16 @@ resource "vmmanager6_vm_qemu" "vm2" {
   cluster = 1
   account = "${vmmanager6_account.user.id}"
   domain = "mein.example.com"
-  depends_on = [vmmanager6_network.net1, vmmanager6_pool.pool1, vmmanager6_account.user, vmmanager6_vm_qemu.vm1 ]
-  ipv4_pools = [ "${vmmanager6_pool.pool1.id}" ]
-  ipv4_number = 1
+  depends_on = [vmmanager6_account.user, vmmanager6_vm_qemu.vm1, vmmanager6_vxlan.vxlan1 ]
+  vxlan {
+    id = "${vmmanager6_vxlan.vxlan1.id}"
+    ipnet = "${vmmanager6_vxlan.vxlan1.ipnets[0].id}"
+  }
   recipes {
         recipe = 12
         recipe_params {
                 name = "SERVER"
-                value = "${vmmanager6_vm_qemu.vm1.ip_addresses[0].addr}"
+                value = "${vmmanager6_vm_qemu.vm1.ip_addresses[1].addr}"
         }
         recipe_params {
                 name = "COMMENT"
