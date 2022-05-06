@@ -1,3 +1,7 @@
+## 2022-05-06
+
+* Add cpu mode selection
+
 ## 2022-05-04
 
 * Add support for custom interfaces 
