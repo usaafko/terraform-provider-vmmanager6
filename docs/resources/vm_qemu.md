@@ -29,6 +29,7 @@ description: |-
 
 - `account` (Number) VMmanager user id
 - `cluster` (Number) VMmanager 6 cluster id
+- `cpu_mode` (String) Cpu mode. Can be default, host-model, host-passthrough
 - `custom_interfaces` (Block List) You can set some ip address manually (use ip_name) or using pool id (ip_pool) (see [below for nested schema](#nestedblock--custom_interfaces))
 - `desc` (String) The VM description
 - `disk_id` (Number) Internal variable. Main disk ID of VM
