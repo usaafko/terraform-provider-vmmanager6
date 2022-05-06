@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
         "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	vm6api "github.com/usaafko/vmmanager6-api-go"
 //        "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -94,6 +95,17 @@ func resourceVmQemu() *schema.Resource {
                                 Type:     schema.TypeInt,
                                 Required:    true,
                                 Description: "VMmanager 6 template id",
+			},
+			"cpu_mode": {
+				Type:	  schema.TypeString,
+				Optional: true,
+				Description: "Cpu mode. Can be default, host-model, host-passthrough",
+				Default: "default",
+                                ValidateFunc: validation.StringInSlice([]string{
+					"default",
+					"host-model",
+					"host-passthrough",
+				}, false),
 			},
 			"ipv4_number": {
 				Type:     schema.TypeInt,
@@ -291,6 +303,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		Password:     d.Get("password").(string),
 		IPv4:         d.Get("ipv4_number").(int),
 		Os:           d.Get("os").(int),
+		CpuMode:      d.Get("cpu_mode").(string),
 		IPv4Pools:    ipv4_pools_int,
 		Recipes:      recipes_api,
 		CustomInterfaces: d.Get("custom_interfaces").([]interface{}),
@@ -345,10 +358,11 @@ func resourceVmQemuUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// VMmanager has different APIs to change things. 
 	// 1. Resources
-	if d.HasChanges("cores", "memory") {
+	if d.HasChanges("cores", "memory", "cpu_mode") {
 		config := vm6api.ResourcesQemu{
 			Cores:		d.Get("cores").(int),
 			Memory:		d.Get("memory").(int),
+			CpuMode:	d.Get("cpu_mode").(string),
 		}
 		logger.Debug().Int("vmid", vmID).Msgf("Updating VM with the following configuration: %+v", config)
 		err = config.UpdateResources(vmr, client)
