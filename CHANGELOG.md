@@ -1,3 +1,7 @@
+## 2022-07-26
+
+* Add preset selection
+
 ## 2022-05-06
 
 * Add cpu mode selection
