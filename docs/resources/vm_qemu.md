@@ -17,10 +17,7 @@ description: |-
 
 ### Required
 
-- `cores` (Number) Number of vCPU's for VM
-- `disk` (Number) Disk Size of VM in Megabytes
 - `domain` (String) Domain for VM's ip addresses and hostname
-- `memory` (Number) RAM Size of VM in Megabytes
 - `name` (String) The VM name
 - `os` (Number) VMmanager 6 template id
 - `password` (String, Sensitive) Password for VM
@@ -29,13 +26,17 @@ description: |-
 
 - `account` (Number) VMmanager user id
 - `cluster` (Number) VMmanager 6 cluster id
+- `cores` (Number) Number of vCPU's for VM
 - `cpu_mode` (String) Cpu mode. Can be default, host-model, host-passthrough
 - `custom_interfaces` (Block List) You can set some ip address manually (use ip_name) or using pool id (ip_pool) (see [below for nested schema](#nestedblock--custom_interfaces))
 - `desc` (String) The VM description
+- `disk` (Number) Disk Size of VM in Megabytes
 - `disk_id` (Number) Internal variable. Main disk ID of VM
 - `id` (String) The ID of this resource.
 - `ipv4_number` (Number) Number of ipv4 addresses
 - `ipv4_pools` (List of Number) VMmanager ip pools, to use for ip assignment
+- `memory` (Number) RAM Size of VM in Megabytes
+- `preset` (Number) id of VM preset. Preset will overwrite your cpu/mem/disk settings
 - `recipes` (Block List) Array of recipes and params (see [below for nested schema](#nestedblock--recipes))
 - `vxlan` (Block List) Use vxlan to create VM in local network without public ips, or mix it with custom_interfaces (see [below for nested schema](#nestedblock--vxlan))
 
