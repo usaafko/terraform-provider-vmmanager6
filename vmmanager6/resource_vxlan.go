@@ -2,15 +2,15 @@ package vmmanager6
 
 import (
 	"context"
-//	"strings"
+	//	"strings"
 	"log"
-//	"strconv"
-//	"fmt"
+	//	"strconv"
+	//	"fmt"
 	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-        "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	vm6api "github.com/usaafko/vmmanager6-api-go"
-//        "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // using a global variable here so that we have an internally accessible
@@ -19,89 +19,88 @@ import (
 var vxlanResource *schema.Resource
 
 func resourceVxlan() *schema.Resource {
-        vxlanResource = &schema.Resource{
-                Create:        resourceVxlanCreate,
-                Read:          resourceVxlanRead,
-                UpdateContext: resourceVxlanUpdate,
-                Delete:        resourceVxlanDelete,
-                Importer: &schema.ResourceImporter{
-                        StateContext: schema.ImportStatePassthroughContext,
-                },
+	vxlanResource = &schema.Resource{
+		Create:        resourceVxlanCreate,
+		Read:          resourceVxlanRead,
+		UpdateContext: resourceVxlanUpdate,
+		Delete:        resourceVxlanDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
-				ForceNew: true,
-                                Required:    true,
-                                Description: "Name of VxLAN",
+				ForceNew:    true,
+				Required:    true,
+				Description: "Name of VxLAN",
 			},
 			"account": {
-                                Type:     schema.TypeInt,
-                                Required:    true,
-				ForceNew: true,
-                                Description: "Account for VxLAN",
-                        },
+				Type:        schema.TypeInt,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Account for VxLAN",
+			},
 			"clusters": {
-                                Type:     schema.TypeList,
-                                Required:    true,
-				ForceNew: true,
-                                Description: "Array of clusters id, where this VxLAN will work",
-                                Elem: &schema.Schema{
+				Type:        schema.TypeList,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Array of clusters id, where this VxLAN will work",
+				Elem: &schema.Schema{
 					Type: schema.TypeInt,
-                                },
-                        },
+				},
+			},
 			"comment": {
-                                Type:     schema.TypeString,
-                                Optional: true,
-                                Description: "VxLAN Description",
-                                Default: "",
-                        },
-                        "ipnets": {
-				Type: schema.TypeList,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "VxLAN Description",
+				Default:     "",
+			},
+			"ipnets": {
+				Type:        schema.TypeList,
+				Optional:    true,
 				Description: "List of networks, that need to be added to VxLAN",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type: schema.TypeInt,
+							Type:        schema.TypeInt,
 							Description: "Id of network inside VxLAN",
-							Computed: true,
+							Computed:    true,
 						},
 						"name": {
-							Type: schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
 							Description: "IPv4 range in CIDR format",
 						},
 						"gateway": {
-							Type: schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
 							Description: "Gateway for this network",
 						},
 					},
 				},
 			},
 			"ippool": {
-				Type: schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
 				Description: "id of Ip pool, can be used for vm creation",
 			},
-
 		},
 	}
-        return vxlanResource
+	return vxlanResource
 }
 
 func resourceVxlanCreate(d *schema.ResourceData, meta interface{}) error {
 	// create a logger for this function
-        logger, _ := CreateSubLogger("resource_vxlan_create")
+	logger, _ := CreateSubLogger("resource_vxlan_create")
 
 	// DEBUG print out the create request
-        flatValue, _ := resourceDataToFlatValues(d, vxlanResource)
-        jsonString, _ := json.Marshal(flatValue)
+	flatValue, _ := resourceDataToFlatValues(d, vxlanResource)
+	jsonString, _ := json.Marshal(flatValue)
 
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
-        client := pconf.Client
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
+	client := pconf.Client
 
 	//check if vxlan exists
 
@@ -132,20 +131,20 @@ func resourceVxlanCreate(d *schema.ResourceData, meta interface{}) error {
 		cluster := resCluster.(int)
 		clusters = append(clusters, cluster)
 	}
-	config := vm6api.ConfigNewVxLAN {
-		Name: d.Get("name").(string),
-		Comment: d.Get("comment").(string),
-		Account: d.Get("account").(int),
+	config := vm6api.ConfigNewVxLAN{
+		Name:     d.Get("name").(string),
+		Comment:  d.Get("comment").(string),
+		Account:  d.Get("account").(int),
 		Clusters: clusters,
-		Ips: NewIpnets,
+		Ips:      NewIpnets,
 	}
-	
+
 	vmid, err = config.CreateVxLAN(client)
 	if err != nil {
 		return err
 	}
 	d.SetId(vmid)
-	
+
 	// Update IP pool info
 	err = _resourceVxlanRead(d, meta)
 	if err != nil {
@@ -155,7 +154,7 @@ func resourceVxlanCreate(d *schema.ResourceData, meta interface{}) error {
 	logger.Debug().Msgf("Finished VxLAN read resulting in data: '%+v'", string(jsonString))
 
 	log.Print("[DEBUG][VxLANCreate] creation done!")
-        return nil
+	return nil
 }
 
 func resourceVxlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -165,18 +164,18 @@ func resourceVxlanUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceVxlanRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
-		
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
+
 	return _resourceVxlanRead(d, meta)
 }
 
 func resourceVxlanDelete(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
 
-        client := pconf.Client
+	client := pconf.Client
 	err := client.DeleteVxLAN(d.Id())
 	return err
 
@@ -184,23 +183,22 @@ func resourceVxlanDelete(d *schema.ResourceData, meta interface{}) error {
 
 func _resourceVxlanRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        client := pconf.Client
-        // create a logger for this function
-        logger, _ := CreateSubLogger("resource_vxlan_read")
+	client := pconf.Client
+	// create a logger for this function
+	logger, _ := CreateSubLogger("resource_vxlan_read")
 
 	_, err := client.GetVxLANInfo(d.Id())
 	if err != nil {
-                d.SetId("")
-                return nil
-        }
+		d.SetId("")
+		return nil
+	}
 
-        config, err := vm6api.NewConfigVxLANFromApi(d.Id(), client)
-        if err != nil {
-                return err
-        }
+	config, err := vm6api.NewConfigVxLANFromApi(d.Id(), client)
+	if err != nil {
+		return err
+	}
 
-
-        logger.Debug().Msgf("[READ] Received VxLAN Config from VMmanager6 API: %+v", config)
+	logger.Debug().Msgf("[READ] Received VxLAN Config from VMmanager6 API: %+v", config)
 
 	d.Set("name", config.Name)
 	d.Set("comment", config.Comment)
@@ -208,7 +206,7 @@ func _resourceVxlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("account", config.Account.Id)
 	// TODO check clusters
 	flatIpConfig := make([]map[string]interface{}, 0, 1)
-        for _, thisip := range config.Ips {
+	for _, thisip := range config.Ips {
 		thisFlattenedIp := make(map[string]interface{})
 		thisFlattenedIp["id"] = thisip.Id
 		thisFlattenedIp["name"] = thisip.Name
@@ -218,14 +216,11 @@ func _resourceVxlanRead(d *schema.ResourceData, meta interface{}) error {
 	if d.Set("ipnets", flatIpConfig); err != nil {
 		return err
 	}
-	
-
 
 	// DEBUG print out the read result
-        flatValue, _ := resourceDataToFlatValues(d, vxlanResource)
-        jsonString, _ := json.Marshal(flatValue)
+	flatValue, _ := resourceDataToFlatValues(d, vxlanResource)
+	jsonString, _ := json.Marshal(flatValue)
 	logger.Debug().Msgf("Finished VM read resulting in data: '%+v'", string(jsonString))
 
-        return nil
+	return nil
 }
-

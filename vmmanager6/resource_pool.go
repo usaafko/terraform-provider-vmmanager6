@@ -2,15 +2,15 @@ package vmmanager6
 
 import (
 	"context"
-//	"strings"
+	//	"strings"
 	"log"
-//	"strconv"
-//	"fmt"
+	//	"strconv"
+	//	"fmt"
 	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-        "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	vm6api "github.com/usaafko/vmmanager6-api-go"
-//        "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // using a global variable here so that we have an internally accessible
@@ -19,59 +19,57 @@ import (
 var poolResource *schema.Resource
 
 func resourcePool() *schema.Resource {
-        poolResource = &schema.Resource{
-                Create:        resourcePoolCreate,
-                Read:          resourcePoolRead,
-                UpdateContext: resourcePoolUpdate,
-                Delete:        resourcePoolDelete,
-                Importer: &schema.ResourceImporter{
-                        StateContext: schema.ImportStatePassthroughContext,
-                },
+	poolResource = &schema.Resource{
+		Create:        resourcePoolCreate,
+		Read:          resourcePoolRead,
+		UpdateContext: resourcePoolUpdate,
+		Delete:        resourcePoolDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"pool": {
 				Type:        schema.TypeString,
-                                Required:    true,
-                                Description: "Ipv4 or Ipv6 Network in CIDR format",
+				Required:    true,
+				Description: "Ipv4 or Ipv6 Network in CIDR format",
 			},
 			"ranges": {
-                                Type:     schema.TypeList,
-                                Required:    true,
-                                Description: "Range of ips in pool. Format: 192.168.0.1 or 192.168.0.1-192.168.0.10 or 192.168.0.0/24",
-                                Elem: &schema.Schema{
+				Type:        schema.TypeList,
+				Required:    true,
+				Description: "Range of ips in pool. Format: 192.168.0.1 or 192.168.0.1-192.168.0.10 or 192.168.0.0/24",
+				Elem: &schema.Schema{
 					Type: schema.TypeString,
-                                },
-                        },
+				},
+			},
 			"desc": {
-                                Type:     schema.TypeString,
-                                Optional: true,
-                                Description: "Pool Description",
-                                Default: "",
-                        },
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Pool Description",
+				Default:     "",
+			},
 			"cluster": {
-                                Type:     schema.TypeInt,
-                                Optional: true,
-                                Description: "id of Cluster where need to enable pool",
-                                Default: 1,
-                        },
-
-
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "id of Cluster where need to enable pool",
+				Default:     1,
+			},
 		},
-		}
-        return poolResource
+	}
+	return poolResource
 }
 
 func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	// create a logger for this function
-        logger, _ := CreateSubLogger("resource_pool_create")
+	logger, _ := CreateSubLogger("resource_pool_create")
 
 	// DEBUG print out the create request
-        flatValue, _ := resourceDataToFlatValues(d, poolResource)
-        jsonString, _ := json.Marshal(flatValue)
+	flatValue, _ := resourceDataToFlatValues(d, poolResource)
+	jsonString, _ := json.Marshal(flatValue)
 
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
-        client := pconf.Client
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
+	client := pconf.Client
 
 	//check if pool exists
 
@@ -92,10 +90,10 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
 		myRanges = append(myRanges, Range.(string))
 	}
 	config := vm6api.ConfigNewPool{
-                Name:         d.Get("pool").(string),
-                Note:         d.Get("desc").(string),
-                Ranges:       myRanges,
-		Cluster:      d.Get("cluster").(int),
+		Name:    d.Get("pool").(string),
+		Note:    d.Get("desc").(string),
+		Ranges:  myRanges,
+		Cluster: d.Get("cluster").(int),
 	}
 	vmid, err = config.CreatePool(client)
 	if err != nil {
@@ -105,25 +103,25 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	logger.Debug().Msgf("Finished Pool read resulting in data: '%+v'", string(jsonString))
 
 	log.Print("[DEBUG][PoolCreate] vm creation done!")
-        return nil
+	return nil
 }
 
 func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
+	lock := pmParallelBegin(pconf)
 
-        defer lock.unlock()
+	defer lock.unlock()
 	// create a logger for this function
-        logger, _ := CreateSubLogger("resource_pool_update")
+	logger, _ := CreateSubLogger("resource_pool_update")
 
 	client := pconf.Client
 	logger.Info().Msg("Starting update of the pool resource")
 	config, err := client.GetPoolInfo(d.Id())
 	if err != nil {
-                d.SetId("")
-                return nil
-        }
-	
+		d.SetId("")
+		return nil
+	}
+
 	if d.HasChanges("pool", "desc") {
 		err = client.UpdatePoolSettings(d.Id(), d.Get("pool").(string), d.Get("desc").(string))
 		logger.Info().Msg("Change pool name and desc")
@@ -132,12 +130,12 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			return diag.FromErr(err)
 		}
 	}
-	if d.HasChange("ranges"){
+	if d.HasChange("ranges") {
 		oldValuesRaw, newValuesRaw := d.GetChange("ranges")
-                oldValues := oldValuesRaw.([]interface{})
-                newValues := newValuesRaw.([]interface{})
+		oldValues := oldValuesRaw.([]interface{})
+		newValues := newValuesRaw.([]interface{})
 		for i := range oldValues {
-			if ! InterfaceStringsContains(newValues, oldValues[i]) { //remove something
+			if !InterfaceStringsContains(newValues, oldValues[i]) { //remove something
 				curRanges := config["ipnets"].([]interface{})
 				for _, v := range curRanges {
 					testRange := v.(map[string]interface{})["name"].(string)
@@ -153,7 +151,7 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 		}
 		for i := range newValues {
-			if ! InterfaceStringsContains(oldValues, newValues[i]) { //that's new value
+			if !InterfaceStringsContains(oldValues, newValues[i]) { //that's new value
 				logger.Debug().Msgf("Add range to pool %v", newValues[i].(string))
 				err = client.CreatePoolRange(d.Id(), newValues[i].(string))
 				if err != nil {
@@ -177,10 +175,10 @@ func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePoolDelete(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
 
-        client := pconf.Client
+	client := pconf.Client
 	err := client.DeletePool(d.Id())
 	return err
 
@@ -188,39 +186,37 @@ func resourcePoolDelete(d *schema.ResourceData, meta interface{}) error {
 
 func _resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        client := pconf.Client
-        // create a logger for this function
-        logger, _ := CreateSubLogger("resource_pool_read")
+	client := pconf.Client
+	// create a logger for this function
+	logger, _ := CreateSubLogger("resource_pool_read")
 
 	// Try to get information on the Pool. If this call err's out
-        // that indicates the Pool does not exist. We indicate that to terraform
-        // by calling a SetId("")
+	// that indicates the Pool does not exist. We indicate that to terraform
+	// by calling a SetId("")
 	_, err := client.GetPoolInfo(d.Id())
 	if err != nil {
-                d.SetId("")
-                return nil
-        }
+		d.SetId("")
+		return nil
+	}
 
-        config, err := vm6api.NewConfigPoolFromApi(d.Id(), client)
-        if err != nil {
-                return err
-        }
+	config, err := vm6api.NewConfigPoolFromApi(d.Id(), client)
+	if err != nil {
+		return err
+	}
 
-
-        logger.Debug().Msgf("[READ] Received Pool Config from VMmanager6 API: %+v", config)
+	logger.Debug().Msgf("[READ] Received Pool Config from VMmanager6 API: %+v", config)
 
 	d.Set("pool", config.Name)
 	d.Set("desc", config.Note)
 	var getRanges []string
-	for _,val := range config.Ranges{
+	for _, val := range config.Ranges {
 		getRanges = append(getRanges, val.Range)
 	}
 	d.Set("ranges", getRanges)
 	// DEBUG print out the read result
-        flatValue, _ := resourceDataToFlatValues(d, poolResource)
-        jsonString, _ := json.Marshal(flatValue)
+	flatValue, _ := resourceDataToFlatValues(d, poolResource)
+	jsonString, _ := json.Marshal(flatValue)
 	logger.Debug().Msgf("Finished VM read resulting in data: '%+v'", string(jsonString))
 
-        return nil
+	return nil
 }
-

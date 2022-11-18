@@ -2,16 +2,16 @@ package vmmanager6
 
 import (
 	"context"
-	"strings"
-	"log"
-	"strconv"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-        "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	vm6api "github.com/usaafko/vmmanager6-api-go"
-//        "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"log"
+	"strconv"
+	"strings"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // using a global variable here so that we have an internally accessible
@@ -20,242 +20,242 @@ import (
 var thisResource *schema.Resource
 
 func resourceVmQemu() *schema.Resource {
-        thisResource = &schema.Resource{
-                Create:        resourceVmQemuCreate,
-                Read:          resourceVmQemuRead,
-                UpdateContext: resourceVmQemuUpdate,
-                Delete:        resourceVmQemuDelete,
-                Importer: &schema.ResourceImporter{
-                        StateContext: schema.ImportStatePassthroughContext,
-                },
+	thisResource = &schema.Resource{
+		Create:        resourceVmQemuCreate,
+		Read:          resourceVmQemuRead,
+		UpdateContext: resourceVmQemuUpdate,
+		Delete:        resourceVmQemuDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
-                                Required:    true,
-                                Description: "The VM name",
+				Required:    true,
+				Description: "The VM name",
 			},
 			"desc": {
-                                Type:     schema.TypeString,
-                                Optional: true,
-                                DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-                                        return strings.TrimSpace(old) == strings.TrimSpace(new)
-                                },
-                                Default:     "",
-                                Description: "The VM description",
-                        },
-			"cores": {
-                                Type:     schema.TypeInt,
-                                Optional: true,
-				Default: 1,
-                                Description: "Number of vCPU's for VM",
-                        },
-			"memory": {
-                                Type:     schema.TypeInt,
-                                Optional: true,
-				Default: 512,
-                                Description: "RAM Size of VM in Megabytes",
-                        },
-			"disk": {
-                                Type:     schema.TypeInt,
-                                Optional: true,
-				Default: 6000,
-                                Description: "Disk Size of VM in Megabytes",
-                        },
-			"preset": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Optional: true,
-				Default: 0,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
+				Default:     "",
+				Description: "The VM description",
+			},
+			"cores": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     1,
+				Description: "Number of vCPU's for VM",
+			},
+			"memory": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     512,
+				Description: "RAM Size of VM in Megabytes",
+			},
+			"disk": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     6000,
+				Description: "Disk Size of VM in Megabytes",
+			},
+			"preset": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     0,
 				Description: "id of VM preset. Preset will overwrite your cpu/mem/disk settings",
 			},
 			"disk_id": {
-				Type:	  schema.TypeInt,
-				Optional:         true,
-                                Computed:         true,
-				Description:      "Internal variable. Main disk ID of VM",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
+				Description: "Internal variable. Main disk ID of VM",
 			},
 			"cluster": {
-                                Type:     schema.TypeInt,
-                                Optional: true,
-                                Default:     1,
-				ForceNew: true,
-                                Description: "VMmanager 6 cluster id",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     1,
+				ForceNew:    true,
+				Description: "VMmanager 6 cluster id",
 			},
 			"account": {
-                                Type:     schema.TypeInt,
-                                Optional: true,
-                                Default:     3,
-                                Description: "VMmanager user id",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     3,
+				Description: "VMmanager user id",
 			},
 			"domain": {
-                                Type:     schema.TypeString,
-                                Required: true,
-                                Description: "Domain for VM's ip addresses and hostname",
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Domain for VM's ip addresses and hostname",
 			},
 			"password": {
-                                Type:     schema.TypeString,
-                                Required:    true,
+				Type:      schema.TypeString,
+				Required:  true,
 				Sensitive: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return new == "**********"
 				},
-                                Description: "Password for VM",
+				Description: "Password for VM",
 			},
 			"os": {
-                                Type:     schema.TypeInt,
-                                Required:    true,
-                                Description: "VMmanager 6 template id",
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "VMmanager 6 template id",
 			},
 			"cpu_mode": {
-				Type:	  schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 				Description: "Cpu mode. Can be default, host-model, host-passthrough",
-				Default: "default",
-                                ValidateFunc: validation.StringInSlice([]string{
+				Default:     "default",
+				ValidateFunc: validation.StringInSlice([]string{
 					"default",
 					"host-model",
 					"host-passthrough",
 				}, false),
 			},
 			"ipv4_number": {
-				Type:     schema.TypeInt,
+				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "Number of ipv4 addresses",
 			},
 			"ipv4_pools": {
-				Type:	schema.TypeList,
-                                Optional:    true,
-				ForceNew: true,
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
 				Description: "VMmanager ip pools, to use for ip assignment",
 				Elem: &schema.Schema{
-                                        Type: schema.TypeInt,
-                                },
+					Type: schema.TypeInt,
+				},
 			},
 			"custom_interfaces": {
-				Type:	schema.TypeList,
-                                Optional:    true,
-				ForceNew: true,
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
 				Description: "You can set some ip address manually (use ip_name) or using pool id (ip_pool)",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bridge": {
-							Type: schema.TypeString,
+							Type:        schema.TypeString,
 							Description: "Bridge name for interface",
-							Optional: true,
-							Default: "vmbr0",
+							Optional:    true,
+							Default:     "vmbr0",
 						},
 						"ip_name": {
-							Type: schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
 							Description: "Ip address to apply",
 						},
 						"ippool": {
-							Type: schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
 							Description: "Pool of ip addresses to apply",
 						},
 						"ip_count": {
-							Type: schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
 							Description: "How many ips add to this interface from ip_pool",
-							Default: 1,
+							Default:     1,
 						},
 					},
 				},
 			},
 			"vxlan": {
-				Type: schema.TypeList,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
 				Description: "Use vxlan to create VM in local network without public ips, or mix it with custom_interfaces",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type: schema.TypeInt,
-							Required: true,
+							Type:        schema.TypeInt,
+							Required:    true,
 							Description: "id of VxLAN",
 						},
 						"ipnet": {
-							Type: schema.TypeInt,
-							Required: true,
+							Type:        schema.TypeInt,
+							Required:    true,
 							Description: "id of network inside VxLAN",
 						},
 						"ipv4_number": {
-							Type: schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
 							Description: "How many ips from VxLAN needed",
-							Default: 1,
+							Default:     1,
 						},
 					},
 				},
 			},
 			"ip_addresses": {
-				Type: schema.TypeList,
-				Computed: true,
+				Type:        schema.TypeList,
+				Computed:    true,
 				Description: "Internal. List of vms ip addresses",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"domain": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"family": {
-							Type: schema.TypeInt,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"id": {
-							Type: schema.TypeInt,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"netid": {
-							Type: schema.TypeInt,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"gateway": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"addr": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"mask": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
 			"recipes": {
-				Type: schema.TypeList,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
 				Description: "Array of recipes and params",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recipe": {
-							Type: schema.TypeInt,
-							Required: true,
+							Type:        schema.TypeInt,
+							Required:    true,
 							Description: "id of recipe",
-							ForceNew: true,
+							ForceNew:    true,
 						},
 						"recipe_params": {
-							Type: schema.TypeList,
-							Optional: true,
+							Type:        schema.TypeList,
+							Optional:    true,
 							Description: "Array of recipe params",
-							ForceNew: true,
+							ForceNew:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
-										Type: schema.TypeString,
-										Required: true,
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "param name",
-										ForceNew: true,
+										ForceNew:    true,
 									},
 									"value": {
-										Type: schema.TypeString,
-										Required: true,
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "param value",
-										ForceNew: true,
+										ForceNew:    true,
 									},
 								},
 							},
@@ -263,24 +263,23 @@ func resourceVmQemu() *schema.Resource {
 					},
 				},
 			},
-
 		},
 	}
-        return thisResource
+	return thisResource
 }
 
 func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 	// create a logger for this function
-        logger, _ := CreateSubLogger("resource_vm_create")
+	logger, _ := CreateSubLogger("resource_vm_create")
 
 	// DEBUG print out the create request
-        flatValue, _ := resourceDataToFlatValues(d, thisResource)
-        jsonString, _ := json.Marshal(flatValue)
+	flatValue, _ := resourceDataToFlatValues(d, thisResource)
+	jsonString, _ := json.Marshal(flatValue)
 
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        //defer lock.unlock()
-        client := pconf.Client
+	lock := pmParallelBegin(pconf)
+	//defer lock.unlock()
+	client := pconf.Client
 
 	// Collect pools from config
 	ipv4_pools := d.Get("ipv4_pools").([]interface{})
@@ -299,25 +298,24 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-
 	config := vm6api.ConfigNewQemu{
-                Name:         d.Get("name").(string),
-                Description:  d.Get("desc").(string),
-		Memory:       d.Get("memory").(int),
-		QemuCores:    d.Get("cores").(int),
-		QemuDisks:    d.Get("disk").(int),
-		Cluster:      d.Get("cluster").(int),
-		Account:      d.Get("account").(int),
-		Domain:       d.Get("domain").(string),
-		Password:     d.Get("password").(string),
-		IPv4:         d.Get("ipv4_number").(int),
-		Os:           d.Get("os").(int),
-		CpuMode:      d.Get("cpu_mode").(string),
-		Preset:	      d.Get("preset").(int),
-		IPv4Pools:    ipv4_pools_int,
-		Recipes:      recipes_api,
+		Name:             d.Get("name").(string),
+		Description:      d.Get("desc").(string),
+		Memory:           d.Get("memory").(int),
+		QemuCores:        d.Get("cores").(int),
+		QemuDisks:        d.Get("disk").(int),
+		Cluster:          d.Get("cluster").(int),
+		Account:          d.Get("account").(int),
+		Domain:           d.Get("domain").(string),
+		Password:         d.Get("password").(string),
+		IPv4:             d.Get("ipv4_number").(int),
+		Os:               d.Get("os").(int),
+		CpuMode:          d.Get("cpu_mode").(string),
+		Preset:           d.Get("preset").(int),
+		IPv4Pools:        ipv4_pools_int,
+		Recipes:          recipes_api,
 		CustomInterfaces: d.Get("custom_interfaces").([]interface{}),
-		Vxlans: d.Get("vxlan").([]interface{}),
+		Vxlans:           d.Get("vxlan").([]interface{}),
 	}
 	vmid, err := config.CreateVm(client)
 	if err != nil {
@@ -331,30 +329,30 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Print("[DEBUG][QemuVmCreate] vm creation done!")
-        lock.unlock()
-        return nil
+	lock.unlock()
+	return nil
 }
 
 func resourceVmQemuUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
+	lock := pmParallelBegin(pconf)
 	// create a logger for this function
-        logger, _ := CreateSubLogger("resource_vm_update")
+	logger, _ := CreateSubLogger("resource_vm_update")
 
-        client := pconf.Client
+	client := pconf.Client
 	vmID, err := strconv.Atoi(d.Id())
-        if err != nil {
-                return diag.FromErr(err)
-        }
-        vmr := vm6api.NewVmRef(vmID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	vmr := vm6api.NewVmRef(vmID)
 	logger.Info().Int("vmid", vmID).Msg("Starting update of the VM resource")
 
 	// Try to get information on the vm. If this call err's out
-        // that indicates the VM does not exist.
-        _, err = client.GetVmInfo(vmr)
-        if err != nil {
-                return diag.FromErr(err)
-        }
+	// that indicates the VM does not exist.
+	_, err = client.GetVmInfo(vmr)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if d.HasChange("disk") {
 		oldValuesRaw, newValuesRaw := d.GetChange("disk")
@@ -365,14 +363,13 @@ func resourceVmQemuUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-
-	// VMmanager has different APIs to change things. 
+	// VMmanager has different APIs to change things.
 	// 1. Resources
 	if d.HasChanges("cores", "memory", "cpu_mode") {
 		config := vm6api.ResourcesQemu{
-			Cores:		d.Get("cores").(int),
-			Memory:		d.Get("memory").(int),
-			CpuMode:	d.Get("cpu_mode").(string),
+			Cores:   d.Get("cores").(int),
+			Memory:  d.Get("memory").(int),
+			CpuMode: d.Get("cpu_mode").(string),
 		}
 		logger.Debug().Int("vmid", vmID).Msgf("Updating VM with the following configuration: %+v", config)
 		err = config.UpdateResources(vmr, client)
@@ -383,8 +380,8 @@ func resourceVmQemuUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	// 2. VM settings
 	if d.HasChanges("name", "desc") {
 		config := vm6api.UpdateConfigQemu{
-			Name:		d.Get("name").(string),
-			Description:	d.Get("desc").(string),
+			Name:        d.Get("name").(string),
+			Description: d.Get("desc").(string),
 		}
 		logger.Debug().Int("vmid", vmID).Msgf("Updating VM with the following configuration: %+v", config)
 		err = config.UpdateConfig(vmr, client)
@@ -396,46 +393,46 @@ func resourceVmQemuUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	// 3. Change OS
 	if d.HasChange("os") {
 		config := vm6api.ReinstallOS{
-			Id:		d.Get("os").(int),
-			Password:	d.Get("password").(string),
-			EmailMode:	"saas_only",
+			Id:        d.Get("os").(int),
+			Password:  d.Get("password").(string),
+			EmailMode: "saas_only",
 		}
 		logger.Debug().Int("vmid", vmID).Msgf("Updating VM with the following configuration: %+v", config)
 		err = config.ReinstallOS(vmr, client)
 		if err != nil {
-                        return diag.FromErr(err)
-                }
+			return diag.FromErr(err)
+		}
 	}
 	// 4. Change password
 	if d.HasChange("password") {
 		logger.Debug().Int("vmid", vmID).Msgf("Updating VM password")
 		err = client.ChangePassword(vmr, d.Get("password").(string))
 		if err != nil {
-                        return diag.FromErr(err)
-                }
+			return diag.FromErr(err)
+		}
 	}
 	// 5. Owner
 	if d.HasChange("account") {
 		logger.Debug().Int("vmid", vmID).Msgf("Updating VM owner %v", d.Get("account").(int))
 		err = client.ChangeOwner(vmr, d.Get("account").(int))
 		if err != nil {
-                        return diag.FromErr(err)
-                }
+			return diag.FromErr(err)
+		}
 	}
 	// 6. Disk
-	if d.HasChange("disk"){
+	if d.HasChange("disk") {
 		config := vm6api.ConfigDisk{
 			Size: d.Get("disk").(int),
-			Id: d.Get("disk_id").(int),
+			Id:   d.Get("disk_id").(int),
 		}
 		logger.Debug().Int("vmid", vmID).Msgf("Updating VM with the following configuration: %+v", config)
 		err = config.UpdateDisk(client)
 		if err != nil {
-                        return diag.FromErr(err)
-                }
+			return diag.FromErr(err)
+		}
 	}
 	// 7. Domain
-	if d.HasChange("domain"){
+	if d.HasChange("domain") {
 		vmIps := d.Get("ip_addresses").([]interface{})
 		flatIpConfig := make([]map[string]interface{}, 0, 1)
 		newdomain := d.Get("domain").(string)
@@ -461,20 +458,20 @@ func resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
 	lock := pmParallelBegin(pconf)
 	defer lock.unlock()
-		
+
 	return _resourceVmQemuRead(d, meta)
 }
 
 func resourceVmQemuDelete(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
 
-        client := pconf.Client
+	client := pconf.Client
 	vmID, err := strconv.Atoi(d.Id())
 	if err != nil {
-                return err
-        }
+		return err
+	}
 	vmr := vm6api.NewVmRef(vmID)
 	err = client.DeleteQemuVm(vmr)
 	return err
@@ -483,41 +480,41 @@ func resourceVmQemuDelete(d *schema.ResourceData, meta interface{}) error {
 
 func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        client := pconf.Client
-        // create a logger for this function
-        logger, _ := CreateSubLogger("resource_vm_read")
+	client := pconf.Client
+	// create a logger for this function
+	logger, _ := CreateSubLogger("resource_vm_read")
 
 	vmID, err := strconv.Atoi(d.Id())
 	if err != nil {
-                return err
-        }
+		return err
+	}
 	vmr := vm6api.NewVmRef(vmID)
 
 	// Try to get information on the vm. If this call err's out
-        // that indicates the VM does not exist. We indicate that to terraform
-        // by calling a SetId("")
-        _, err = client.GetVmInfo(vmr)
+	// that indicates the VM does not exist. We indicate that to terraform
+	// by calling a SetId("")
+	_, err = client.GetVmInfo(vmr)
 	if err != nil {
-                d.SetId("")
-                return nil
-        }
-        config, err := vm6api.NewConfigQemuFromApi(vmr, client)
-        if err != nil {
-                return err
-        }
+		d.SetId("")
+		return nil
+	}
+	config, err := vm6api.NewConfigQemuFromApi(vmr, client)
+	if err != nil {
+		return err
+	}
 
 	vmState, err := client.GetVmState(vmr)
-        log.Printf("[DEBUG] VM status: %s", vmState)
+	log.Printf("[DEBUG] VM status: %s", vmState)
 
 	if err == nil && vmState == "active" {
-                log.Printf("[DEBUG] VM is running, cheking the IP")
+		log.Printf("[DEBUG] VM is running, cheking the IP")
 	}
 
 	if err != nil {
-                return err
-        }
+		return err
+	}
 
-        logger.Debug().Int("vmid", vmID).Msgf("[READ] Received Config from VMmanager6 API: %+v", config)
+	logger.Debug().Int("vmid", vmID).Msgf("[READ] Received Config from VMmanager6 API: %+v", config)
 
 	d.Set("name", config.Name)
 	d.Set("desc", config.Description)
@@ -531,14 +528,13 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("os", config.Os.Id)
 	d.Set("disk_id", config.QemuDisks.Id)
 
-
 	ipconfig, err := vm6api.NewConfigQemuIpsFromApi(vmr, client)
-        if err != nil {
-                return err
-        }
+	if err != nil {
+		return err
+	}
 
-        flatIpConfig := make([]map[string]interface{}, 0, 1)
-        for _, thisip := range ipconfig {
+	flatIpConfig := make([]map[string]interface{}, 0, 1)
+	for _, thisip := range ipconfig {
 		thisFlattenedIp := make(map[string]interface{})
 		thisFlattenedIp["domain"] = thisip.Domain
 		thisFlattenedIp["family"] = thisip.Family
@@ -554,10 +550,9 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// DEBUG print out the read result
-        flatValue, _ := resourceDataToFlatValues(d, thisResource)
-        jsonString, _ := json.Marshal(flatValue)
+	flatValue, _ := resourceDataToFlatValues(d, thisResource)
+	jsonString, _ := json.Marshal(flatValue)
 	logger.Debug().Int("vmid", vmID).Msgf("Finished VM read resulting in data: '%+v'", string(jsonString))
 
-        return nil
+	return nil
 }
-
