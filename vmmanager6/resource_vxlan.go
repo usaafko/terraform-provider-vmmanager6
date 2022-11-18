@@ -164,6 +164,10 @@ func resourceVxlanUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceVxlanRead(d *schema.ResourceData, meta interface{}) error {
+	pconf := meta.(*providerConfiguration)
+        lock := pmParallelBegin(pconf)
+        defer lock.unlock()
+		
 	return _resourceVxlanRead(d, meta)
 }
 
@@ -180,8 +184,6 @@ func resourceVxlanDelete(d *schema.ResourceData, meta interface{}) error {
 
 func _resourceVxlanRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
         client := pconf.Client
         // create a logger for this function
         logger, _ := CreateSubLogger("resource_vxlan_read")

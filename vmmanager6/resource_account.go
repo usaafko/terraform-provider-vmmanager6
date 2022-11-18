@@ -190,6 +190,10 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
+	pconf := meta.(*providerConfiguration)
+        lock := pmParallelBegin(pconf)
+        defer lock.unlock()
+		
 	return _resourceAccountRead(d, meta)
 }
 
@@ -206,8 +210,6 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 
 func _resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
         client := pconf.Client
         // create a logger for this function
         logger, _ := CreateSubLogger("resource_account_read")

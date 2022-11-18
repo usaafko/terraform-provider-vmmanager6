@@ -458,6 +458,10 @@ func resourceVmQemuUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
+	pconf := meta.(*providerConfiguration)
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
+		
 	return _resourceVmQemuRead(d, meta)
 }
 
@@ -479,8 +483,6 @@ func resourceVmQemuDelete(d *schema.ResourceData, meta interface{}) error {
 
 func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
         client := pconf.Client
         // create a logger for this function
         logger, _ := CreateSubLogger("resource_vm_read")

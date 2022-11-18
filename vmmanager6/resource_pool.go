@@ -168,6 +168,10 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
+	pconf := meta.(*providerConfiguration)
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
+
 	return _resourcePoolRead(d, meta)
 }
 
@@ -184,8 +188,6 @@ func resourcePoolDelete(d *schema.ResourceData, meta interface{}) error {
 
 func _resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
         client := pconf.Client
         // create a logger for this function
         logger, _ := CreateSubLogger("resource_pool_read")

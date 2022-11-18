@@ -127,6 +127,10 @@ func resourceNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceNetworkRead(d *schema.ResourceData, meta interface{}) error {
+	pconf := meta.(*providerConfiguration)
+        lock := pmParallelBegin(pconf)
+        defer lock.unlock()
+        
 	return _resourceNetworkRead(d, meta)
 }
 
@@ -143,8 +147,6 @@ func resourceNetworkDelete(d *schema.ResourceData, meta interface{}) error {
 
 func _resourceNetworkRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
         client := pconf.Client
         // create a logger for this function
         logger, _ := CreateSubLogger("resource_network_read")
