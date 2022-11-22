@@ -2,8 +2,8 @@ package vmmanager6
 
 import (
 	"context"
-	"strings"
 	"log"
+	"strings"
 	//	"strconv"
 	//	"fmt"
 	"encoding/json"
@@ -19,63 +19,63 @@ import (
 var accountResource *schema.Resource
 
 func resourceAccount() *schema.Resource {
-        accountResource = &schema.Resource{
-                Create:        resourceAccountCreate,
-                Read:          resourceAccountRead,
-                UpdateContext: resourceAccountUpdate,
-                Delete:        resourceAccountDelete,
-                Importer: &schema.ResourceImporter{
-                        StateContext: schema.ImportStatePassthroughContext,
-                },
+	accountResource = &schema.Resource{
+		Create:        resourceAccountCreate,
+		Read:          resourceAccountRead,
+		UpdateContext: resourceAccountUpdate,
+		Delete:        resourceAccountDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"email": {
 				Type:        schema.TypeString,
-                                Required:    true,
-                                Description: "User log in to VMmanager by email",
-                                ForceNew: true,
+				Required:    true,
+				Description: "User log in to VMmanager by email",
+				ForceNew:    true,
 			},
 			"state": {
-                                Type:     schema.TypeString,
-                                Computed: true,
-                                Description: "Internal - user state",
-                        },
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Internal - user state",
+			},
 			"role": {
-                                Type:     schema.TypeString,
-                                Optional: true,
-                                Description: "User role, must be @admin or @advanced_user or @user",           
-                                Default: "@admin",
-                                ValidateFunc: validation.StringInSlice([]string{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "User role, must be @admin or @advanced_user or @user",
+				Default:     "@admin",
+				ValidateFunc: validation.StringInSlice([]string{
 					"@admin",
 					"@advanced_user",
 					"@user",
 				}, false),
-                        },
-                        "password": {
-                                Type:     schema.TypeString,
-                                Required: true,
-                                Sensitive: true,
-                                Description: "User password",
-                                ForceNew: true,
-                        },
-                        "ssh_keys": {
-				Type: schema.TypeList,
-				Optional: true,
+			},
+			"password": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
+				Description: "User password",
+				ForceNew:    true,
+			},
+			"ssh_keys": {
+				Type:        schema.TypeList,
+				Optional:    true,
 				Description: "Set of public ssh keys for account",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type: schema.TypeInt,
-							Computed: true,
+							Type:        schema.TypeInt,
+							Computed:    true,
 							Description: "id of public ssh key",
 						},
 						"name": {
-							Type: schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
 							Description: "name of public ssh key",
 						},
 						"ssh_pub_key": {
-							Type: schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
 							Description: "public ssh key",
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return strings.TrimSpace(old) == strings.TrimSpace(new)
@@ -83,24 +83,24 @@ func resourceAccount() *schema.Resource {
 						},
 					},
 				},
-                        },
+			},
 		},
-		}
-        return accountResource
+	}
+	return accountResource
 }
 
 func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	// create a logger for this function
-        logger, _ := CreateSubLogger("resource_account_create")
+	logger, _ := CreateSubLogger("resource_account_create")
 
 	// DEBUG print out the create request
-        flatValue, _ := resourceDataToFlatValues(d, accountResource)
-        jsonString, _ := json.Marshal(flatValue)
+	flatValue, _ := resourceDataToFlatValues(d, accountResource)
+	jsonString, _ := json.Marshal(flatValue)
 
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
-        client := pconf.Client
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
+	client := pconf.Client
 
 	//check if account exists
 
@@ -117,9 +117,9 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	config := vm6api.ConfigNewAccount{
-                Email:		d.Get("email").(string),
-		Role:		d.Get("role").(string),
-                Password:       d.Get("password").(string),
+		Email:    d.Get("email").(string),
+		Role:     d.Get("role").(string),
+		Password: d.Get("password").(string),
 	}
 	vmid, err = config.CreateAccount(client)
 	if err != nil {
@@ -154,51 +154,55 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Print("[DEBUG][AccountCreate] creation done!")
-        return nil
+	return nil
 }
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
+	lock := pmParallelBegin(pconf)
 
-        defer lock.unlock()
+	defer lock.unlock()
 	// create a logger for this function
-        logger, _ := CreateSubLogger("resource_account_update")
+	logger, _ := CreateSubLogger("resource_account_update")
 
 	client := pconf.Client
 	logger.Info().Msg("Starting update of the account resource")
 
 	_, err := client.GetAccountInfo(d.Id())
 	if err != nil {
-                d.SetId("")
-                return nil
-        }
+		d.SetId("")
+		return nil
+	}
 
-        if d.HasChange("role"){
+	if d.HasChange("role") {
 		err = client.ChangeAccountRole(d.Id(), d.Get("role").(string))
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-        }
-        if d.HasChange("ssh_keys"){
-        	// TODO: add ssh change
-        }
+	}
+	if d.HasChange("ssh_keys") {
+		// TODO: add ssh change
+	}
 
-        logger.Info().Msg("End of update of the account resource")
+	logger.Info().Msg("End of update of the account resource")
 	return nil
 }
 
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
+	pconf := meta.(*providerConfiguration)
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
+
 	return _resourceAccountRead(d, meta)
 }
 
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
+	lock := pmParallelBegin(pconf)
+	defer lock.unlock()
 
-        client := pconf.Client
+	client := pconf.Client
 	err := client.DeleteAccount(d.Id())
 	return err
 
@@ -206,24 +210,21 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 
 func _resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	pconf := meta.(*providerConfiguration)
-        lock := pmParallelBegin(pconf)
-        defer lock.unlock()
-        client := pconf.Client
-        // create a logger for this function
-        logger, _ := CreateSubLogger("resource_account_read")
+	client := pconf.Client
+	// create a logger for this function
+	logger, _ := CreateSubLogger("resource_account_read")
 
 	_, err := client.GetAccountInfo(d.Id())
 	if err != nil {
-                d.SetId("")
-                return nil
-        }
-        config, err := vm6api.NewConfigAccountFromApi(d.Id(), client)
-        if err != nil {
-                return err
-        }
+		d.SetId("")
+		return nil
+	}
+	config, err := vm6api.NewConfigAccountFromApi(d.Id(), client)
+	if err != nil {
+		return err
+	}
 
-
-        logger.Debug().Msgf("[READ] Received Account Config from VMmanager6 API: %+v", config)
+	logger.Debug().Msgf("[READ] Received Account Config from VMmanager6 API: %+v", config)
 
 	d.Set("state", config.State)
 	d.Set("role", config.Role)
@@ -233,10 +234,9 @@ func _resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ssh_keys", ssh_keys)
 
 	// DEBUG print out the read result
-        flatValue, _ := resourceDataToFlatValues(d, accountResource)
-        jsonString, _ := json.Marshal(flatValue)
+	flatValue, _ := resourceDataToFlatValues(d, accountResource)
+	jsonString, _ := json.Marshal(flatValue)
 	logger.Debug().Msgf("Finished account read resulting in data: '%+v'", string(jsonString))
 
-        return nil
+	return nil
 }
-
