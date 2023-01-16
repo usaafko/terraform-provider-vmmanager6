@@ -322,6 +322,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	d.SetId(fmt.Sprint(vmid))
+
 	logger.Debug().Int("vmid", vmid).Msgf("Finished VM read resulting in data: '%+v'", string(jsonString))
 	err = _resourceVmQemuRead(d, meta)
 	if err != nil {
@@ -524,7 +525,6 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cluster", config.Cluster.Id)
 	d.Set("account", config.Account.Id)
 	d.Set("domain", config.Domain)
-	d.Set("ipv4_number", len(config.IPv4))
 	d.Set("os", config.Os.Id)
 	d.Set("disk_id", config.QemuDisks.Id)
 
