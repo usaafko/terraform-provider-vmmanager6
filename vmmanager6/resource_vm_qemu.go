@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	vm6api "github.com/usaafko/vmmanager6-api-go"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	vm6api "github.com/naughtyerica/vmmanager6-api-go"
 	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
@@ -79,6 +80,13 @@ func resourceVmQemu() *schema.Resource {
 				Default:     1,
 				ForceNew:    true,
 				Description: "VMmanager 6 cluster id",
+			},
+			"node": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     1,
+				ForceNew:    true,
+				Description: "VMmanager 6 node id",
 			},
 			"account": {
 				Type:        schema.TypeInt,
@@ -305,6 +313,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		QemuCores:        d.Get("cores").(int),
 		QemuDisks:        d.Get("disk").(int),
 		Cluster:          d.Get("cluster").(int),
+		Node:             d.Get("node").(int),
 		Account:          d.Get("account").(int),
 		Domain:           d.Get("domain").(string),
 		Password:         d.Get("password").(string),
@@ -523,6 +532,7 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cores", config.QemuCores)
 	d.Set("disk", config.QemuDisks.Size)
 	d.Set("cluster", config.Cluster.Id)
+	d.Set("node", config.Node.Id)
 	d.Set("account", config.Account.Id)
 	d.Set("domain", config.Domain)
 	d.Set("os", config.Os.Id)

@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/usaafko/terraform-provider-vmmanager6/vmmanager6"
+	"github.com/naughtyerica/terraform-provider-vmmanager6/vmmanager6"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 	var pluginPath string
 
 	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
-	flag.StringVar(&pluginPath, "registry", "github.com/usaafko/terraform-provider-vmmanager6", "specify path, useful for local debugging")
+	flag.StringVar(&pluginPath, "registry", "github.com/naughtyerica/terraform-provider-vmmanager6", "specify path, useful for local debugging")
 	flag.Parse()
 
 	opts := &plugin.ServeOpts{ProviderFunc: func() *schema.Provider {

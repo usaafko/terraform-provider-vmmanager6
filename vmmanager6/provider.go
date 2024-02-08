@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	vm6api "github.com/usaafko/vmmanager6-api-go"
+	vm6api "github.com/naughtyerica/vmmanager6-api-go"
 )
 
 type providerConfiguration struct {

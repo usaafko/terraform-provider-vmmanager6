@@ -4,13 +4,15 @@ import (
 	"context"
 	"log"
 	"strings"
+
 	//	"strconv"
 	//	"fmt"
 	"encoding/json"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	vm6api "github.com/usaafko/vmmanager6-api-go"
+	vm6api "github.com/naughtyerica/vmmanager6-api-go"
 )
 
 // using a global variable here so that we have an internally accessible
