@@ -124,6 +124,12 @@ func resourceVmQemu() *schema.Resource {
 					"host-passthrough",
 				}, false),
 			},
+			"anti_spoofing": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Anti spoofing",
+			},
 			"ipv4_number": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -319,6 +325,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		Password:         d.Get("password").(string),
 		IPv4:             d.Get("ipv4_number").(int),
 		Os:               d.Get("os").(int),
+		Anti_spoofing:    d.Get("anti_spoofing").(bool),
 		CpuMode:          d.Get("cpu_mode").(string),
 		Preset:           d.Get("preset").(int),
 		IPv4Pools:        ipv4_pools_int,
