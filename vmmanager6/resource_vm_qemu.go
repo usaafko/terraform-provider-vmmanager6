@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	vm6api "github.com/usaafko/vmmanager6-api-go"
-	"log"
-	"strconv"
-	"strings"
 	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
@@ -80,6 +81,12 @@ func resourceVmQemu() *schema.Resource {
 				ForceNew:    true,
 				Description: "VMmanager 6 cluster id",
 			},
+			"node": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "VMmanager 6 node id",
+			},
 			"account": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -115,6 +122,12 @@ func resourceVmQemu() *schema.Resource {
 					"host-model",
 					"host-passthrough",
 				}, false),
+			},
+			"anti_spoofing": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Anti spoofing",
 			},
 			"ipv4_number": {
 				Type:        schema.TypeInt,
@@ -305,11 +318,13 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		QemuCores:        d.Get("cores").(int),
 		QemuDisks:        d.Get("disk").(int),
 		Cluster:          d.Get("cluster").(int),
+		Node:             d.Get("node").(int),
 		Account:          d.Get("account").(int),
 		Domain:           d.Get("domain").(string),
 		Password:         d.Get("password").(string),
 		IPv4:             d.Get("ipv4_number").(int),
 		Os:               d.Get("os").(int),
+		Anti_spoofing:    d.Get("anti_spoofing").(bool),
 		CpuMode:          d.Get("cpu_mode").(string),
 		Preset:           d.Get("preset").(int),
 		IPv4Pools:        ipv4_pools_int,
@@ -523,6 +538,7 @@ func _resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cores", config.QemuCores)
 	d.Set("disk", config.QemuDisks.Size)
 	d.Set("cluster", config.Cluster.Id)
+	d.Set("node", config.Node.Id)
 	d.Set("account", config.Account.Id)
 	d.Set("domain", config.Domain)
 	d.Set("os", config.Os.Id)
