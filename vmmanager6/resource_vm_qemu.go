@@ -84,6 +84,7 @@ func resourceVmQemu() *schema.Resource {
 			"node": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default: 	 0,
 				ForceNew:    true,
 				Description: "VMmanager 6 node id",
 			},
