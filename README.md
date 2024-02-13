@@ -68,6 +68,8 @@ resource "vmmanager6_vm_qemu" "vm1" {
   os = 1
   password = "@1231sdas"
   cluster = 1
+  node        = 1
+  anti_spoofing = false
   account = "${vmmanager6_account.user.id}"
   domain = "mein.example.com"
   depends_on = [vmmanager6_network.net1, vmmanager6_pool.pool1, vmmanager6_account.user ]
