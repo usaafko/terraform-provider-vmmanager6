@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	vm6api "github.com/naughtyerica/vmmanager6-api-go"
+	vm6api "github.com/usaafko/vmmanager6-api-go"
 	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
@@ -84,7 +84,6 @@ func resourceVmQemu() *schema.Resource {
 			"node": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     1,
 				ForceNew:    true,
 				Description: "VMmanager 6 node id",
 			},
