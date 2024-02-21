@@ -62,6 +62,35 @@ func resourceVmQemu() *schema.Resource {
 				Default:     6000,
 				Description: "Disk Size of VM in Megabytes",
 			},
+			"disks": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:	 true,
+				Description: "Secondary Disk of VM",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"size_mib": {
+							Type:        schema.TypeInt,
+							Description: "Disk Size of VM in Megabytes",
+							Optional:    true,
+							Default:     6000,
+						},
+						"boot_order": {
+							Type:        schema.TypeInt,
+							Description: "Boot order of the Disk",
+							Required:	 true,
+						},
+						"tags": {
+							Type:        schema.TypeList,
+							Description: "Tag of the Disk ",
+							Optional:    true,
+							Elem: &schema.Schema{
+								Type: schema.TypeInt,
+							},
+						},
+					},
+				},
+			},
 			"preset": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -311,27 +340,38 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	
+	// Collect disks from config
+	secondary_disk_config := d.Get("disks").([]interface{})
+	var secondary_disk_api []vm6api.ConfigSecondaryDisk
+
+	j, err = json.Marshal(secondary_disk_config)
+	err = json.Unmarshal(j, &secondary_disk_api)
+	if err != nil {
+		return err
+	}
 
 	config := vm6api.ConfigNewQemu{
-		Name:             d.Get("name").(string),
-		Description:      d.Get("desc").(string),
-		Memory:           d.Get("memory").(int),
-		QemuCores:        d.Get("cores").(int),
-		QemuDisks:        d.Get("disk").(int),
-		Cluster:          d.Get("cluster").(int),
-		Node:             d.Get("node").(int),
-		Account:          d.Get("account").(int),
-		Domain:           d.Get("domain").(string),
-		Password:         d.Get("password").(string),
-		IPv4:             d.Get("ipv4_number").(int),
-		Os:               d.Get("os").(int),
-		Anti_spoofing:    d.Get("anti_spoofing").(bool),
-		CpuMode:          d.Get("cpu_mode").(string),
-		Preset:           d.Get("preset").(int),
-		IPv4Pools:        ipv4_pools_int,
-		Recipes:          recipes_api,
-		CustomInterfaces: d.Get("custom_interfaces").([]interface{}),
-		Vxlans:           d.Get("vxlan").([]interface{}),
+		Name:             	d.Get("name").(string),
+		Description:      	d.Get("desc").(string),
+		Memory:           	d.Get("memory").(int),
+		QemuCores:        	d.Get("cores").(int),
+		QemuDisks:        	d.Get("disk").(int),
+		QemuSecondaryDisks: secondary_disk_api,
+		Cluster:          	d.Get("cluster").(int),
+		Node:             	d.Get("node").(int),
+		Account:          	d.Get("account").(int),
+		Domain:           	d.Get("domain").(string),
+		Password:         	d.Get("password").(string),
+		IPv4:             	d.Get("ipv4_number").(int),
+		Os:               	d.Get("os").(int),
+		Anti_spoofing:    	d.Get("anti_spoofing").(bool),
+		CpuMode:          	d.Get("cpu_mode").(string),
+		Preset:           	d.Get("preset").(int),
+		IPv4Pools:        	ipv4_pools_int,
+		Recipes:          	recipes_api,
+		CustomInterfaces: 	d.Get("custom_interfaces").([]interface{}),
+		Vxlans:           	d.Get("vxlan").([]interface{}),
 	}
 	vmid, err := config.CreateVm(client)
 	if err != nil {
